@@ -1,0 +1,31 @@
+<RCC>
+    <qresource prefix="/icons">
+        <file>images/copy.png</file>
+        <file>images/delete.png</file>
+        <file>images/fast_forward.png</file>
+        <file>images/help.png</file>
+        <file>images/import.png</file>
+        <file>images/paste.png</file>
+        <file>images/pause.png</file>
+        <file>images/play.png</file>
+        <file>images/plus.png</file>
+        <file>images/redo.png</file>
+        <file>images/repeat.png</file>
+        <file>images/reset.png</file>
+        <file>images/rewind.png</file>
+        <file>images/speed.png</file>
+        <file>images/trim.png</file>
+        <file>images/undo.png</file>
+        <file>images/volume_level0.png</file>
+        <file>images/volume_level1.png</file>
+        <file>images/volume_level2.png</file>
+        <file>images/volume_level3.png</file>
+        <file>images/cut.png</file>
+        <file>images/record.png</file>
+        <file>images/zoom_in.png</file>
+        <file>images/zoom_out.png</file>
+        <file>images/help_button.png</file>
+        <file>images/stop_recording.png</file>
+        <file>images/down_arrow.png</file>
+    </qresource>
+</RCC>
