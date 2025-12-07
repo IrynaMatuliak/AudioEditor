@@ -1,8 +1,10 @@
-// createprojectwindow.cpp
+// .cpp
 #include "createprojectwindow.h"
 #include "projectworkwindow.h"
 #include "mainwindow.h"
 #include "ui_createprojectwindow.h"
+
+#include <QSettings>
 #include <QRegularExpression>
 #include <QIntValidator>
 #include <QDebug>
@@ -22,6 +24,39 @@ CreateProjectWindow::CreateProjectWindow(QWidget *parent)
     , ui(new Ui::CreateProjectWindow)
 {
     ui->setupUi(this);
+
+    // QString messageBoxStyle =
+    //     "QMessageBox {"
+    //     "   background-color: #333333;"
+    //     "   color: white;"
+    //     "   border: 1px solid #555555;"
+    //     "}"
+    //     "QMessageBox QLabel {"
+    //     "   color: white;"
+    //     "   padding: 5px;"
+    //     "}"
+    //     "QMessageBox QPushButton {"
+    //     "   background-color: #555555;"
+    //     "   color: white;"
+    //     "   border: 1px solid #777777;"
+    //     "   padding: 8px 15px;"
+    //     "   min-width: 70px;"
+    //     "   border-radius: 3px;"
+    //     "   font-weight: bold;"
+    //     "}"
+    //     "QMessageBox QPushButton:hover {"
+    //     "   background-color: #666666;"
+    //     "   border-color: #888888;"
+    //     "}"
+    //     "QMessageBox QPushButton:pressed {"
+    //     "   background-color: #444444;"
+    //     "   border-color: #666666;"
+    //     "}"
+    //     "QMessageBox QPushButton:focus {"
+    //     "   outline: none;"
+    //     "   border: 2px solid #0078d7;"
+    //     "}";
+    // qApp->setStyleSheet(messageBoxStyle);
 
     QWidget *centralWidget = new QWidget(this);
     centralWidget->setStyleSheet("background-color: #000000; color: white;");
@@ -128,13 +163,13 @@ CreateProjectWindow::CreateProjectWindow(QWidget *parent)
     ui->cancelButton->setStyleSheet("QPushButton { background-color: #1E1E2F; color: white; border-radius: 12px; border: 1px solid #444; }"
                                     "QPushButton:hover { background-color: #3A3A5C; }");
 
-    ui->OKCreateProjectButton->setFixedSize(101, 41);
-    ui->OKCreateProjectButton->setText("OK");
-    ui->OKCreateProjectButton->setStyleSheet("QPushButton { background-color: #1E1E2F; color: white; border-radius: 12px; border: 1px solid #444; }"
-                                             "QPushButton:hover { background-color: #3A3A5C; }");
+    ui->createButton->setFixedSize(101, 41);
+    ui->createButton->setText("Create");
+    ui->createButton->setStyleSheet("QPushButton { background-color: #1E1E2F; color: white; border-radius: 12px; border: 1px solid #444; }"
+                                    "QPushButton:hover { background-color: #3A3A5C; }");
 
     buttonLayout->addWidget(ui->cancelButton);
-    buttonLayout->addWidget(ui->OKCreateProjectButton);
+    buttonLayout->addWidget(ui->createButton);
     mainLayout->addLayout(buttonLayout);
 
     ui->projectNameInput->setPlaceholderText("Enter project name");
@@ -154,11 +189,8 @@ CreateProjectWindow::CreateProjectWindow(QWidget *parent)
     connect(ui->browseButton, &QPushButton::clicked, this, &CreateProjectWindow::browseForProjectFolder);
     connect(ui->projectNameInput, &QTextEdit::textChanged, this, &CreateProjectWindow::validateProjectName);
     connect(ui->durationInput, &QTextEdit::textChanged, this, &CreateProjectWindow::validateDuration);
-<<<<<<< HEAD
-=======
-    connect(ui->OKCreateProjectButton, &QPushButton::clicked, this, &CreateProjectWindow::on_OKCreateProjectButton_clicked);
->>>>>>> de8e1a508d86f85302d557ebbb4302794635d9c0
     connect(ui->cancelButton, &QPushButton::clicked, this, &CreateProjectWindow::on_cancelButton_clicked);
+    connect(ui->createButton, &QPushButton::clicked, this, &CreateProjectWindow::on_OKButton_clicked);
 
     setMinimumSize(1070, 685);
 }
@@ -170,8 +202,12 @@ CreateProjectWindow::~CreateProjectWindow()
 
 void CreateProjectWindow::browseForProjectFolder()
 {
+    QSettings appSettings;
+    QString homePathLast = appSettings.value("project/homePathLast", "").toString();
+    if (homePathLast=="") homePathLast = QDir::homePath();
+
     QString dir = QFileDialog::getExistingDirectory(this, "Select Project Folder",
-                                                    QDir::homePath(),
+                                                    homePathLast,
                                                     QFileDialog::ShowDirsOnly);
 
     if (!dir.isEmpty()) {
@@ -208,6 +244,7 @@ void CreateProjectWindow::validateDuration()
     bool ok;
     int value = text.toInt(&ok);
 
+    //if (!ok || value <= 0 || value > 10*60*60)
     if (!ok || value <= 0 || value > 300)
     {
         durationError->setText("Must be a number between 1 and 300");
@@ -219,7 +256,22 @@ void CreateProjectWindow::validateDuration()
     }
 }
 
-void CreateProjectWindow::on_OKCreateProjectButton_clicked()
+void showError(const QString& errorText, CreateProjectWindow* owner)
+{
+    QString errorStyle = "QMessageBox { background-color: black; } "
+                         "QLabel { color: white; } "
+                         "QPushButton { color: white; background-color: #333; }";
+
+    QMessageBox msgBox(owner);
+    msgBox.setStyleSheet(errorStyle);
+    msgBox.setWindowTitle("Error");
+
+    msgBox.setText(errorText);
+    msgBox.setIcon(QMessageBox::Critical);
+    msgBox.exec();
+}
+
+void CreateProjectWindow::on_OKButton_clicked()
 {
     validateProjectName();
     validateDuration();
@@ -247,24 +299,13 @@ void CreateProjectWindow::on_OKCreateProjectButton_clicked()
     }
 
     if (!errors.isEmpty()) {
-        QString errorStyle = "QMessageBox { background-color: black; } "
-                             "QLabel { color: white; } "
-                             "QPushButton { color: white; background-color: #333; }";
-
-        QMessageBox msgBox(this);
-        msgBox.setStyleSheet(errorStyle);
-        msgBox.setWindowTitle("Error");
-
         QString errorText;
         if (errors.count() == 1) {
             errorText = errors.first();
         } else {
             errorText = "Please correct the following errors:\n- " + errors.join("\n- ");
         }
-
-        msgBox.setText(errorText);
-        msgBox.setIcon(QMessageBox::Critical);
-        msgBox.exec();
+        showError(errorText, this);
         return;
     }
 
@@ -288,23 +329,15 @@ void CreateProjectWindow::on_OKCreateProjectButton_clicked()
     }
     else if (audioFormat == "MP3") {
         fileExtension = "mp3";
-<<<<<<< HEAD
         format = SF_FORMAT_MPEG | SF_FORMAT_MPEG_LAYER_III;
-=======
->>>>>>> de8e1a508d86f85302d557ebbb4302794635d9c0
     }
 
     QString audioFilePath = fullPath + "." + fileExtension;
 
-<<<<<<< HEAD
-    createAudioFile(audioFilePath, duration, samplingRate, format);
-=======
-    if (audioFormat == "MP3") {
-        createMp3File(audioFilePath, duration, samplingRate);
-    } else {
-        createAudioFile(audioFilePath, duration, samplingRate, format);
+    if (!createAudioFile(audioFilePath, duration, samplingRate, format)) {
+        showError(QString("Failed to create audio file: ") + QString(sf_strerror(NULL)), this);
+        return;
     }
->>>>>>> de8e1a508d86f85302d557ebbb4302794635d9c0
 
     ProjectWorkWindow *workWindow = new ProjectWorkWindow();
     workWindow->initializeProject(projectName, duration,
@@ -313,96 +346,36 @@ void CreateProjectWindow::on_OKCreateProjectButton_clicked()
                                   audioFormat,
                                   audioFilePath);
     workWindow->show();
-
     this->close();
 }
 
-void CreateProjectWindow::createAudioFile(const QString &filePath, int durationSec, int sampleRate, int format)
+bool CreateProjectWindow::createAudioFile(const QString &filePath, int durationSec, int sampleRate, int format)
 {
     SF_INFO sfinfo;
-<<<<<<< HEAD
     memset(&sfinfo, 0, sizeof(sfinfo));
-=======
->>>>>>> de8e1a508d86f85302d557ebbb4302794635d9c0
     sfinfo.samplerate = sampleRate;
     sfinfo.channels = 2;
     sfinfo.format = format;
 
     SNDFILE* file = sf_open(filePath.toUtf8().constData(), SFM_WRITE, &sfinfo);
-    if (!file) {
-        QMessageBox::critical(nullptr, "Error", "Failed to create audio file: " + QString(sf_strerror(NULL)));
-        return;
+    if (file) {
+        const int bufferSize = 1024;
+        const int channels = 2;
+        std::vector<float> buffer(bufferSize * channels, 0.0f);
+        int totalFrames = durationSec * sfinfo.samplerate;
+        int framesWritten = 0;
+
+        while (framesWritten < totalFrames) {
+            int framesToWrite = std::min(bufferSize, totalFrames - framesWritten);
+            sf_writef_float(file, buffer.data(), framesToWrite);
+            framesWritten += framesToWrite;
+        }
+        sf_close(file);
     }
 
-    const int bufferSize = 1024;
-    const int channels = 2;
-    std::vector<float> buffer(bufferSize * channels, 0.0f);
-    int totalFrames = durationSec * sfinfo.samplerate;
-    int framesWritten = 0;
-
-    while (framesWritten < totalFrames) {
-        int framesToWrite = std::min(bufferSize, totalFrames - framesWritten);
-        sf_writef_float(file, buffer.data(), framesToWrite);
-        framesWritten += framesToWrite;
-    }
-
-    sf_close(file);
+    return file != nullptr;
 }
 
-<<<<<<< HEAD
-=======
-void CreateProjectWindow::createMp3File(const QString &filePath, int durationSec, int sampleRate)
-{
-    QString tempWavPath = QDir::tempPath() + "/temp_silence.wav";
-    createAudioFile(tempWavPath, durationSec, sampleRate, SF_FORMAT_WAV | SF_FORMAT_PCM_16);
-
-    lame_global_flags *lame = lame_init();
-    lame_set_in_samplerate(lame, sampleRate);
-    lame_set_num_channels(lame, 2);
-    lame_set_quality(lame, 2);
-    lame_init_params(lame);
-
-    SF_INFO sfinfo;
-    SNDFILE *infile = sf_open(tempWavPath.toUtf8().constData(), SFM_READ, &sfinfo);
-    if (!infile) {
-        QMessageBox::critical(nullptr, "Error", "Failed to open temporary WAV file");
-        lame_close(lame);
-        return;
-    }
-
-    FILE *mp3file = nullptr;
-    fopen_s(&mp3file, filePath.toUtf8().constData(), "wb");
-    if (!mp3file) {
-        QMessageBox::critical(nullptr, "Error", "Failed to create MP3 file");
-        sf_close(infile);
-        lame_close(lame);
-        return;
-    }
-
-    const int MP3_BUFFER_SIZE = 8192;
-    short pcm_buffer[2 * 8192];
-    unsigned char mp3_buffer[MP3_BUFFER_SIZE];
-
-    int read, write;
-    do {
-        read = sf_readf_short(infile, pcm_buffer, 8192);
-        if (read == 0) break;
-
-        write = lame_encode_buffer_interleaved(lame, pcm_buffer, read, mp3_buffer, MP3_BUFFER_SIZE);
-        fwrite(mp3_buffer, 1, write, mp3file);
-    } while (read > 0);
-
-    write = lame_encode_flush(lame, mp3_buffer, MP3_BUFFER_SIZE);
-    fwrite(mp3_buffer, 1, write, mp3file);
-
-    sf_close(infile);
-    fclose(mp3file);
-    lame_close(lame);
-
-    QFile::remove(tempWavPath);
-}
-
->>>>>>> de8e1a508d86f85302d557ebbb4302794635d9c0
 void CreateProjectWindow::on_cancelButton_clicked()
 {
     QWidget *parentWindow = this->parentWidget();

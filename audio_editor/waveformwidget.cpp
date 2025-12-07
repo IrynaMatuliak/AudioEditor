@@ -38,11 +38,7 @@ WaveformWidget::WaveformWidget(QWidget *parent)
     });
 }
 
-<<<<<<< HEAD
 void WaveformWidget::setAudioData(const QVector<float> &data)
-=======
-void WaveformWidget::setAudioData(const QVector<qint16> &data)
->>>>>>> de8e1a508d86f85302d557ebbb4302794635d9c0
 {
     m_audioData = data;
     calculatePeaks();
@@ -62,6 +58,7 @@ void WaveformWidget::setDuration(qint64 durationMs)
     this->update();
 }
 
+// Update playback position (playback movement in audio)
 void WaveformWidget::setPosition(qint64 positionMs)
 {
     m_positionMs = positionMs;
@@ -94,42 +91,25 @@ void WaveformWidget::calculatePeaks()
     if (m_audioData.isEmpty()) return;
 
     const int w = this->width();
-<<<<<<< HEAD
     const int numBins = w * 80;
     m_peaks.resize(numBins);
 
     peakMax = 0.0f;
 
-=======
-    const int numBins = w * 1.5;
-    m_peaks.resize(numBins);
-
->>>>>>> de8e1a508d86f85302d557ebbb4302794635d9c0
     const int samplesPerBin = m_audioData.size() / numBins;
     if (samplesPerBin == 0) return;
 
     for (int i = 0; i < numBins; ++i) {
-<<<<<<< HEAD
         float peakValue = 0;
-=======
-        qint16 max = 0;
->>>>>>> de8e1a508d86f85302d557ebbb4302794635d9c0
         const int start = i * samplesPerBin;
         const int end = qMin(start + samplesPerBin, m_audioData.size());
 
         for (int j = start; j < end; ++j) {
-<<<<<<< HEAD
             peakValue = qMax(peakValue, qAbs(m_audioData[j]));
         }
 
         m_peaks[i] = qMin(peakValue, 1.0f);
         peakMax = qMax(peakMax, peakValue);
-=======
-            max = qMax(max, qAbs(m_audioData[j]));
-        }
-
-        m_peaks[i] = static_cast<float>(max) / 32768.0f;
->>>>>>> de8e1a508d86f85302d557ebbb4302794635d9c0
     }
 }
 
@@ -177,6 +157,7 @@ void WaveformWidget::resizeEvent(QResizeEvent *event)
 
 void WaveformWidget::wheelEvent(QWheelEvent *event)
 {
+    // Zoom while holding down Ctrl
     if (event->modifiers() & Qt::ControlModifier) {
         int delta = event->angleDelta().y();
 
@@ -190,6 +171,7 @@ void WaveformWidget::wheelEvent(QWheelEvent *event)
         int visibleWidth = width() - scaleMargin;
         qint64 visibleDurationMs = static_cast<qint64>(m_timeScale * (visibleWidth / 100.0));
 
+        // Snap zoom to cursor
         QPoint mousePos = event->position().toPoint();
         if (mousePos.x() >= 0 && mousePos.x() < width()) {
             double relativePos = static_cast<double>(mousePos.x() - scaleMargin) / visibleWidth;
@@ -248,7 +230,7 @@ void WaveformWidget::mousePressEvent(QMouseEvent *event)
 void WaveformWidget::mouseMoveEvent(QMouseEvent *event)
 {
     const int scaleMargin = 25;
-
+    // Dragging the playback position
     if (m_dragging) {
         qint64 newPosition = screenXToTime(event->pos().x());
         newPosition = qMax(0ll, qMin(m_durationMs, newPosition));
@@ -260,6 +242,7 @@ void WaveformWidget::mouseMoveEvent(QMouseEvent *event)
             update();
         }
     }
+    // Dragging selection handles
     else if (m_draggingHandle != NoHandle) {
         qint64 newTime = screenXToTime(event->pos().x());
         newTime = qMax(0ll, qMin(m_durationMs, newTime));
@@ -273,6 +256,7 @@ void WaveformWidget::mouseMoveEvent(QMouseEvent *event)
         emit selectionChanged(m_selectionStartMs, m_selectionEndMs);
         update();
     }
+    // Change cursor when hovering over markers
     else {
         if (m_showSelection) {
             int startX = timeToScreenX(m_selectionStartMs);
@@ -364,7 +348,6 @@ int WaveformWidget::getOptimalTimeInterval() const
     }
 }
 
-<<<<<<< HEAD
 namespace {
     const int scaleMargin = 25;
     const int timeLabelHeight = 35;
@@ -441,8 +424,6 @@ void WaveformWidget::paintTimeMarkers(QPainter &painter, int w, int h, const QCo
     }
 }
 
-=======
->>>>>>> de8e1a508d86f85302d557ebbb4302794635d9c0
 void WaveformWidget::paintEvent(QPaintEvent *event)
 {
     Q_UNUSED(event);
@@ -453,13 +434,7 @@ void WaveformWidget::paintEvent(QPaintEvent *event)
     const int w = this->width();
     const int h = this->height();
     const int centerY = h / 2;
-<<<<<<< HEAD
 
-=======
-    const int scaleMargin = 25;
-    const int timeLabelHeight = 35;
-    const int timeLabelTopMargin = 10;
->>>>>>> de8e1a508d86f85302d557ebbb4302794635d9c0
     painter.fillRect(0, 0, w, h, QColor(20, 20, 20));
     if (m_showSelection && m_selectionStartMs != m_selectionEndMs) {
         if (m_selectionStartMs > 0) {
@@ -480,7 +455,6 @@ void WaveformWidget::paintEvent(QPaintEvent *event)
     QFont font = painter.font();
     font.setPointSize(9);
     painter.setFont(font);
-<<<<<<< HEAD
     QFontMetrics fontMetrics(font);
 
     const float amplitudes[] = {1.0f, 0.8f, 0.6f, 0.4f, 0.2f, 0.0f, -0.2f, -0.4f, -0.6f, -0.8f, -1.0f};
@@ -492,15 +466,6 @@ void WaveformWidget::paintEvent(QPaintEvent *event)
     painter.setPen(QPen(scaleColor, 1));
     for (float amplitude : amplitudes) {
         int y = centerY - (amplitude * centerY * waveformAreaHeightMult);
-=======
-
-    const float amplitudes[] = {0.8f, 0.6f, 0.4f, 0.2f, 0.0f, -0.2f, -0.4f, -0.6f, -0.8f};
-    const QColor scaleColor(180, 220, 255);
-
-    painter.setPen(QPen(scaleColor, 1));
-    for (float amplitude : amplitudes) {
-        int y = centerY - (amplitude * centerY);
->>>>>>> de8e1a508d86f85302d557ebbb4302794635d9c0
         painter.setPen(QPen(QColor(80, 80, 160), 1, Qt::DotLine));
         painter.drawLine(scaleMargin, y, w, y);
         painter.setPen(QPen(scaleColor, 1));
@@ -511,59 +476,7 @@ void WaveformWidget::paintEvent(QPaintEvent *event)
     }
 
     if (m_durationMs > 0) {
-<<<<<<< HEAD
         paintTimeMarkers(painter, w, h, scaleColor);
-=======
-        int timeMarkerInterval = getOptimalTimeInterval();
-        qint64 visibleStart = m_offsetMs;
-        qint64 visibleEnd = visibleStart + static_cast<qint64>(m_timeScale * ((w - scaleMargin) / 100.0));
-        qint64 startTime = (visibleStart / timeMarkerInterval) * timeMarkerInterval;
-        for (qint64 timeMs = startTime; timeMs <= visibleEnd; timeMs += timeMarkerInterval) {
-            if (timeMs > m_durationMs) break;
-            int x = timeToScreenX(timeMs);
-            if (x < scaleMargin || x >= w) continue;
-            painter.setPen(QPen(QColor(80, 80, 160), 1, Qt::DotLine));
-            painter.drawLine(x, timeLabelTopMargin + 20, x, h - timeLabelHeight);
-            painter.setPen(QPen(scaleColor, 1));
-
-            QString text;
-            if (timeMarkerInterval < 1000) {
-                int seconds = timeMs / 1000;
-                int milliseconds = timeMs % 1000;
-                text = QString("%1.%2").arg(seconds).arg(milliseconds, 3, 10, QChar('0'));
-            } else if (timeMarkerInterval < 60000) {
-                int seconds = timeMs / 1000;
-                int minutes = seconds / 60;
-                seconds = seconds % 60;
-                text = QString("%1:%2").arg(minutes).arg(seconds, 2, 10, QChar('0'));
-
-                if (timeMarkerInterval < 2000) {
-                    int ms = timeMs % 1000;
-                    text += QString(".%1").arg(ms / 100);
-                }
-            } else {
-                int minutes = timeMs / 60000;
-                int seconds = (timeMs % 60000) / 1000;
-                text = QString("%1:%2").arg(minutes).arg(seconds, 2, 10, QChar('0'));
-            }
-
-            QRect textRect(x - 40, timeLabelTopMargin, 80, 20);
-            painter.drawText(textRect, Qt::AlignCenter, text);
-
-            painter.drawLine(x, timeLabelTopMargin + 15, x, timeLabelTopMargin + 20);
-        }
-
-        // // Draw current time at the position indicator
-        // if (m_positionMs >= visibleStart && m_positionMs <= visibleEnd) {
-        //     int posX = timeToScreenX(m_positionMs);
-        //     QTime currentTime = QTime::fromMSecsSinceStartOfDay(m_positionMs);
-        //     QString timeText = currentTime.toString("m:ss.zzz");
-
-        //     painter.setPen(QPen(Qt::yellow, 1));
-        //     QRect timeRect(posX - 50, timeLabelTopMargin, 100, 20);
-        //     painter.drawText(timeRect, Qt::AlignCenter, timeText);
-        // }
->>>>>>> de8e1a508d86f85302d557ebbb4302794635d9c0
     }
 
     painter.setPen(QPen(QColor(150, 200, 255), 1));
@@ -579,7 +492,6 @@ void WaveformWidget::paintEvent(QPaintEvent *event)
 
         int drawXPrev = 0;
         for (int x = 0; x < m_peaks.size(); ++x) {
-<<<<<<< HEAD
             const qint64 binTime = static_cast<qint64>(x * m_durationMs / m_peaks.size());
 
             if (binTime < visibleStart || binTime > visibleEnd) continue;
@@ -588,16 +500,6 @@ void WaveformWidget::paintEvent(QPaintEvent *event)
             const int drawX = timeToScreenX(binTime);
             const int height = peak * h;
             const int y = centerY - height/2;
-=======
-            qint64 binTime = static_cast<qint64>(x * m_durationMs / m_peaks.size());
-
-            if (binTime < visibleStart || binTime > visibleEnd) continue;
-
-            float peak = m_peaks[x];
-            int drawX = timeToScreenX(binTime);
-            int y = centerY - (peak * centerY);
-            int height = peak * (h - timeLabelHeight - timeLabelTopMargin - 20);
->>>>>>> de8e1a508d86f85302d557ebbb4302794635d9c0
             if (drawXPrev == 0) drawXPrev = drawX; // first time init
             painter.drawRect(drawXPrev, y, drawX-drawXPrev, height);
             drawXPrev = drawX;

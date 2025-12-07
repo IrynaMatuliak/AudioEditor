@@ -8,7 +8,6 @@
 #include "noisereductiondialog.h"
 #include "fadedialog.h"
 #include "ui_projectworkwindow.h"
-<<<<<<< HEAD
 
 #include "AudioEffects/cechoeffect.h"
 #include "AudioEffects/cequalizereffect.h"
@@ -16,8 +15,6 @@
 #include "AudioEffects/cfadeineffect.h"
 #include "AudioEffects/cfadeouteffect.h"
 
-=======
->>>>>>> de8e1a508d86f85302d557ebbb4302794635d9c0
 #include <sndfile.h>
 #include <lame.h>
 #include <QSettings>
@@ -43,11 +40,21 @@
 #include <QComboBox>
 #include <QDoubleSpinBox>
 #include <QInputDialog>
-<<<<<<< HEAD
 #include <QCloseEvent>
-=======
->>>>>>> de8e1a508d86f85302d557ebbb4302794635d9c0
 #include <QtWidgets>
+
+namespace {
+QString getPositionLabel(double position, double duration)
+{
+    QString posStr;
+    if (duration < 60.0*60.0) {
+        posStr = QTime::fromMSecsSinceStartOfDay(position * 1000).toString("mm:ss");
+    } else {
+        posStr = QTime::fromMSecsSinceStartOfDay(position * 1000).toString("h:mm:ss");
+    }
+    return posStr;
+}
+}
 
 ProjectWorkWindow::ProjectWorkWindow(QWidget *parent)
     : QMainWindow(parent)
@@ -426,20 +433,6 @@ void ProjectWorkWindow::initializeProject(const QString& name, double duration,
     player->stop();
     player->setSource(QUrl());
 
-<<<<<<< HEAD
-=======
-    projectName = name;
-    projectDuration = duration;
-    projectSamplingRate = samplingRate;
-    projectChannelsCount = channels;
-    projectFormat = format;
-    projectPath = path;
-    originalFilePath = path;
-
-    undoHistory.clear();
-    currentHistoryIndex = -1;
-
->>>>>>> de8e1a508d86f85302d557ebbb4302794635d9c0
     // original file is copied to tmp folder
     // to avoid extra logic on 'save'
     //---
@@ -448,7 +441,6 @@ void ProjectWorkWindow::initializeProject(const QString& name, double duration,
     QFile(path).copy(tmpOrigFileName);
     //---
 
-<<<<<<< HEAD
     projectName = name;
     projectDuration = duration;
     projectSamplingRate = samplingRate;
@@ -460,8 +452,6 @@ void ProjectWorkWindow::initializeProject(const QString& name, double duration,
     undoHistory.clear();
     currentHistoryIndex = -1;
 
-=======
->>>>>>> de8e1a508d86f85302d557ebbb4302794635d9c0
     AudioState initialState;
     initialState.filePath = tmpOrigFileName;
     initialState.startMs = 0;
@@ -474,15 +464,14 @@ void ProjectWorkWindow::initializeProject(const QString& name, double duration,
     ui->undoButton->setEnabled(false);
     ui->redoButton->setEnabled(false);
 
-<<<<<<< HEAD
     loadAndSetAudioFile(projectPath);
-=======
-    loadAndSetAudioFile(path);
->>>>>>> de8e1a508d86f85302d557ebbb4302794635d9c0
 
     ui->projectNameLabel->setText(projectName);
+
     ui->durationLabel->setVisible(true);
-    ui->currentTimeLabel->setText("00:00");
+    ui->durationLabel->setText(getPositionLabel(projectDuration, projectDuration));
+    ui->currentTimeLabel->setText(getPositionLabel(0.0, projectDuration));
+    ui->timelineSlider->setRange(0, projectDuration * 1000);
 
     waveformWidget->setDuration(projectDuration * 1000);
     loadAudioForVisualization(projectPath);
@@ -496,9 +485,6 @@ void ProjectWorkWindow::loadAndSetAudioFile(const QString& filePath)
     if (!waitForMediaLoad(5000)) {
         qWarning() << "Failed to load media file:" << filePath;
         QMessageBox::warning(this, "Error", "Failed to load audio file: " + filePath);
-    } else {
-        ui->timelineSlider->setRange(0, player->duration());
-        ui->durationLabel->setText(QTime::fromMSecsSinceStartOfDay(player->duration()).toString("mm:ss"));
     }
 }
 
@@ -531,19 +517,11 @@ QString ProjectWorkWindow::createTempFilePath(const QString& prefix)
     return tempDir + "/" + prefix + "_" + QDateTime::currentDateTime().toString("yyyyMMdd_hhmmss") + ".wav";
 }
 
-<<<<<<< HEAD
 void ProjectWorkWindow::updateProjectWithNewFile(const QString& newFilePath, qint64 framesCount, int sampleRate)
 {
     QString oldProjectPath = projectPath;
     projectPath = newFilePath;
     projectDuration = double(framesCount) / sampleRate;
-=======
-void ProjectWorkWindow::updateProjectWithNewFile(const QString& newFilePath, double newDurationSec, int sampleRate)
-{
-    QString oldProjectPath = projectPath;
-    projectPath = newFilePath;
-    projectDuration = newDurationSec;
->>>>>>> de8e1a508d86f85302d557ebbb4302794635d9c0
 
     AudioState newState;
     newState.filePath = projectPath;
@@ -556,19 +534,11 @@ void ProjectWorkWindow::updateProjectWithNewFile(const QString& newFilePath, dou
     ui->undoButton->setEnabled(true);
     ui->redoButton->setEnabled(false);
 
-<<<<<<< HEAD
-=======
-    // Delete the old temporary file
-    if (oldProjectPath != originalFilePath && QFile::exists(oldProjectPath)) {
-        QFile::remove(oldProjectPath);
-    }
-
->>>>>>> de8e1a508d86f85302d557ebbb4302794635d9c0
     // Update UI
     waveformWidget->setDuration(projectDuration * 1000);
     ui->timelineSlider->setRange(0, projectDuration * 1000);
-    ui->durationLabel->setText(QTime::fromMSecsSinceStartOfDay(projectDuration * 1000).toString("mm:ss"));
-    ui->currentTimeLabel->setText("00:00");
+    ui->durationLabel->setText(getPositionLabel(projectDuration, projectDuration));
+    ui->currentTimeLabel->setText(getPositionLabel(0.0, projectDuration));
 
     loadAndSetAudioFile(projectPath);
     reloadAudioVisualization();
@@ -673,13 +643,13 @@ void ProjectWorkWindow::updatePosition(qint64 position)
     if (!ui->timelineSlider->isSliderDown()) {
         ui->timelineSlider->setValue(position);
     }
-    ui->currentTimeLabel->setText(QTime::fromMSecsSinceStartOfDay(position).toString("mm:ss"));
+    ui->currentTimeLabel->setText(getPositionLabel(double(position)/1000.0, projectDuration));
 }
 
 void ProjectWorkWindow::updateDuration(qint64 duration)
 {
     ui->timelineSlider->setRange(0, duration);
-    ui->durationLabel->setText(QTime::fromMSecsSinceStartOfDay(duration).toString("mm:ss"));
+    ui->durationLabel->setText(getPositionLabel(double(duration)/1000.0, projectDuration));
 }
 
 void ProjectWorkWindow::on_speedSlider_valueChanged(int value)
@@ -761,21 +731,11 @@ void ProjectWorkWindow::on_playbackStateChanged(QMediaPlayer::PlaybackState stat
 
 void ProjectWorkWindow::loadAudioForVisualization(const QString &filePath)
 {
-<<<<<<< HEAD
     QVector<float> audioData;
-=======
-    QSharedPointer<QVector<qint16>> audioData(new QVector<qint16>());
-
-    QAudioFormat format;
-    format.setSampleFormat(QAudioFormat::SampleFormat::Int16);
-    format.setSampleRate(projectSamplingRate);
-    format.setChannelCount(projectChannelsCount);
->>>>>>> de8e1a508d86f85302d557ebbb4302794635d9c0
 
     if (filePath.isEmpty()) {
         return;
     }
-<<<<<<< HEAD
 
     SF_INFO sfInfoIn;
     memset(&sfInfoIn, 0, sizeof(sfInfoIn));
@@ -798,42 +758,6 @@ void ProjectWorkWindow::loadAudioForVisualization(const QString &filePath)
         waveformWidget->setDuration(projectDuration * 1000.0);
         waveformWidget->setAudioData(audioData);
     }
-=======
-    QAudioDecoder *decoder = new QAudioDecoder(this);
-
-    decoder->setSource(QUrl::fromLocalFile(filePath));
-    decoder->setAudioFormat(format);
-
-    connect(decoder, &QAudioDecoder::bufferReady, this, [this, decoder, audioData]() {
-        QAudioBuffer buffer = decoder->read();
-        if (!buffer.isValid()) {
-            return;
-        }
-        if (buffer.format().sampleFormat() != QAudioFormat::Int16) {
-            return;
-        }
-        const qint16 *data = buffer.constData<qint16>();
-        if (!data) {
-            return;
-        }
-        int count = buffer.sampleCount();
-        audioData->reserve(audioData->size() + count);
-        for (int i = 0; i < count; ++i) {
-            audioData->append(data[i]);
-        }
-    });
-    connect(decoder, &QAudioDecoder::finished, this, [this, decoder, audioData]() {
-        if (!audioData->isEmpty()) {
-            waveformWidget->setAudioData(*audioData);
-        }
-        decoder->deleteLater();
-    });
-    connect(decoder, QOverload<QAudioDecoder::Error>::of(&QAudioDecoder::error),
-            this, [this, decoder](QAudioDecoder::Error) {
-                decoder->deleteLater();
-            });
-    decoder->start();
->>>>>>> de8e1a508d86f85302d557ebbb4302794635d9c0
 }
 
 void ProjectWorkWindow::on_trimButton_clicked()
@@ -895,11 +819,7 @@ void ProjectWorkWindow::on_trimButton_clicked()
         return;
     }
 
-<<<<<<< HEAD
     const int BUFFER_SIZE = 200000;
-=======
-    const int BUFFER_SIZE = 4096;
->>>>>>> de8e1a508d86f85302d557ebbb4302794635d9c0
     QVector<float> buffer(BUFFER_SIZE * sfinfo.channels);
     sf_count_t totalFramesWritten = 0;
     sf_count_t framesToCopy = trimSamples;
@@ -941,14 +861,10 @@ void ProjectWorkWindow::on_trimButton_clicked()
         return;
     }
     sf_close(testfile);
-<<<<<<< HEAD
 
     updateProjectWithNewFile(tempFile, totalFramesWritten, sfinfo.samplerate);
 
 
-=======
-    updateProjectWithNewFile(tempFile, totalFramesWritten / sfinfo.samplerate, sfinfo.samplerate);
->>>>>>> de8e1a508d86f85302d557ebbb4302794635d9c0
     showSuccessMessage(QString("Trim is done. Selection (%1 - %2) is now the new audio from 0:00")
                            .arg(QTime::fromMSecsSinceStartOfDay(startMs).toString("mm:ss"))
                            .arg(QTime::fromMSecsSinceStartOfDay(endMs).toString("mm:ss")));
@@ -970,11 +886,7 @@ void ProjectWorkWindow::undo()
         player->setSource(QUrl::fromLocalFile(previousState.filePath));
 
         projectPath = previousState.filePath;
-<<<<<<< HEAD
         projectDuration = (previousState.endMs - previousState.startMs) / 1000.0;
-=======
-        projectDuration = (previousState.endMs - previousState.startMs) / 1000;
->>>>>>> de8e1a508d86f85302d557ebbb4302794635d9c0
 
         trimStartMs = previousState.startMs;
         trimEndMs = previousState.endMs;
@@ -982,8 +894,8 @@ void ProjectWorkWindow::undo()
 
         waveformWidget->setDuration(projectDuration * 1000);
         ui->timelineSlider->setRange(0, projectDuration * 1000);
-        ui->durationLabel->setText(QTime::fromMSecsSinceStartOfDay(projectDuration * 1000).toString("mm:ss"));
-        ui->currentTimeLabel->setText("00:00");
+        ui->durationLabel->setText(getPositionLabel(projectDuration, projectDuration));
+        ui->currentTimeLabel->setText(getPositionLabel(0.0, projectDuration));
 
         loadAudioForVisualization(previousState.filePath);
 
@@ -1024,11 +936,7 @@ void ProjectWorkWindow::redo()
         player->setSource(QUrl::fromLocalFile(nextState.filePath));
 
         projectPath = nextState.filePath;
-<<<<<<< HEAD
         projectDuration = (nextState.endMs - nextState.startMs) / 1000.0;
-=======
-        projectDuration = (nextState.endMs - nextState.startMs) / 1000;
->>>>>>> de8e1a508d86f85302d557ebbb4302794635d9c0
 
         trimStartMs = nextState.startMs;
         trimEndMs = nextState.endMs;
@@ -1036,8 +944,8 @@ void ProjectWorkWindow::redo()
 
         waveformWidget->setDuration(projectDuration * 1000);
         ui->timelineSlider->setRange(0, projectDuration * 1000);
-        ui->durationLabel->setText(QTime::fromMSecsSinceStartOfDay(projectDuration * 1000).toString("mm:ss"));
-        ui->currentTimeLabel->setText("00:00");
+        ui->durationLabel->setText(getPositionLabel(projectDuration, projectDuration));
+        ui->currentTimeLabel->setText(getPositionLabel(0.0, projectDuration));
 
         loadAudioForVisualization(nextState.filePath);
 
@@ -1062,71 +970,6 @@ void ProjectWorkWindow::on_redoButton_clicked()
     redo();
 }
 
-<<<<<<< HEAD
-=======
-void ProjectWorkWindow::convertToMP3(const QString& inputPath, const QString& outputPath, int startMs, int endMs)
-{
-    SF_INFO sfinfo;
-    memset(&sfinfo, 0, sizeof(sfinfo));
-    SNDFILE* infile = sf_open(inputPath.toUtf8().constData(), SFM_READ, &sfinfo);
-
-    if (!infile) {
-        QMessageBox::critical(this, "Error", "Cannot open audio file: " + QString(sf_strerror(NULL)));
-        return;
-    }
-
-    qint64 startSample = (startMs * sfinfo.samplerate) / 1000;
-    qint64 endSample = (endMs * sfinfo.samplerate) / 1000;
-    qint64 totalSamples = endSample - startSample;
-
-    if (sf_seek(infile, startSample, SEEK_SET) == -1) {
-        sf_close(infile);
-        QMessageBox::critical(this, "Error", "Cannot seek to start position");
-        return;
-    }
-
-    lame_t lame = lame_init();
-    lame_set_num_channels(lame, sfinfo.channels);
-    lame_set_in_samplerate(lame, sfinfo.samplerate);
-    lame_set_brate(lame, 128);
-    lame_set_quality(lame, 5);
-    lame_init_params(lame);
-
-    QVector<short> pcmBuffer(totalSamples * sfinfo.channels);
-    sf_count_t samplesRead = sf_readf_short(infile, pcmBuffer.data(), totalSamples);
-    sf_close(infile);
-
-    if (samplesRead != totalSamples) {
-        lame_close(lame);
-        QMessageBox::critical(this, "Error", "Failed to read audio data");
-        return;
-    }
-
-    QVector<unsigned char> mp3Buffer(totalSamples * 1.25 + 7200);
-    int mp3bytes;
-
-    if (sfinfo.channels == 2) {
-        mp3bytes = lame_encode_buffer_interleaved(lame, pcmBuffer.data(), totalSamples, mp3Buffer.data(), mp3Buffer.size());
-    } else {
-        mp3bytes = lame_encode_buffer(lame, pcmBuffer.data(), pcmBuffer.data(), totalSamples, mp3Buffer.data(), mp3Buffer.size());
-    }
-
-    int flushBytes = lame_encode_flush(lame, mp3Buffer.data() + mp3bytes, mp3Buffer.size() - mp3bytes);
-    mp3bytes += flushBytes;
-
-    lame_close(lame);
-
-    QFile mp3File(outputPath);
-    if (mp3File.open(QIODevice::WriteOnly)) {
-        mp3File.write(reinterpret_cast<const char*>(mp3Buffer.data()), mp3bytes);
-        mp3File.close();
-        QMessageBox::information(this, "Success", "MP3 file created successfully");
-    } else {
-        QMessageBox::critical(this, "Error", "Cannot create MP3 file");
-    }
-}
-
->>>>>>> de8e1a508d86f85302d557ebbb4302794635d9c0
 QString ProjectWorkWindow::getFormatFromSFInfo(const SF_INFO& info)
 {
     QString format;
@@ -1246,14 +1089,11 @@ void ProjectWorkWindow::cut()
     qint64 endSample = (endMs * sfinfo.samplerate) / 1000;
     qint64 cutSamples = endSample - startSample;
 
-<<<<<<< HEAD
     sf_count_t totalFrames = sf_seek(infile, 0, SF_SEEK_END);
     sf_seek(infile, 0, SF_SEEK_SET);
 
     // remember data to the buffer
     // {
-=======
->>>>>>> de8e1a508d86f85302d557ebbb4302794635d9c0
     cutAudioData.resize(cutSamples * sfinfo.channels);
     sf_seek(infile, startSample, SEEK_SET);
     sf_count_t samplesRead = sf_readf_float(infile, cutAudioData.data(), cutSamples);
@@ -1271,10 +1111,7 @@ void ProjectWorkWindow::cut()
     cutStartMs = startMs;
     cutEndMs = endMs;
     hasCutData = true;
-<<<<<<< HEAD
     // }
-=======
->>>>>>> de8e1a508d86f85302d557ebbb4302794635d9c0
 
     lastActionWasCut = true;
 
@@ -1294,7 +1131,6 @@ void ProjectWorkWindow::cut()
         return;
     }
 
-<<<<<<< HEAD
     const int BUFFER_SIZE = 200000;
     QVector<float> buffer(BUFFER_SIZE * sfinfo.channels);
 
@@ -1304,37 +1140,6 @@ void ProjectWorkWindow::cut()
         sf_count_t framesToCopy = startSample;
         while (framesToCopy > 0) {
             sf_count_t framesThisTime = qMin(framesToCopy, (sf_count_t)BUFFER_SIZE);
-=======
-    const int BUFFER_SIZE = 4096;
-    QVector<float> buffer(BUFFER_SIZE * sfinfo.channels);
-    sf_count_t totalFramesWritten = 0;
-
-    try {
-        if (startSample > 0) {
-            sf_seek(infile, 0, SEEK_SET);
-            sf_count_t framesToCopy = startSample;
-
-            while (framesToCopy > 0) {
-                sf_count_t framesThisTime = qMin(framesToCopy, (sf_count_t)BUFFER_SIZE);
-                sf_count_t framesRead = sf_readf_float(infile, buffer.data(), framesThisTime);
-
-                if (framesRead <= 0) break;
-
-                sf_count_t framesWritten = sf_writef_float(outfile, buffer.data(), framesRead);
-                if (framesWritten != framesRead) {
-                    throw std::runtime_error("Failed to write audio data");
-                }
-
-                totalFramesWritten += framesWritten;
-                framesToCopy -= framesRead;
-            }
-        }
-        sf_seek(infile, endSample, SEEK_SET);
-
-        sf_count_t framesAfterCut = sfinfo.frames - endSample;
-        while (framesAfterCut > 0) {
-            sf_count_t framesThisTime = qMin(framesAfterCut, (sf_count_t)BUFFER_SIZE);
->>>>>>> de8e1a508d86f85302d557ebbb4302794635d9c0
             sf_count_t framesRead = sf_readf_float(infile, buffer.data(), framesThisTime);
 
             if (framesRead <= 0) break;
@@ -1343,7 +1148,6 @@ void ProjectWorkWindow::cut()
             if (framesWritten != framesRead) {
                 throw std::runtime_error("Failed to write audio data");
             }
-<<<<<<< HEAD
             framesToCopy -= framesRead;
         }
         sf_seek(infile, endSample, SEEK_SET);
@@ -1356,11 +1160,6 @@ void ProjectWorkWindow::cut()
             if (framesWritten != framesRead) {
                 throw std::runtime_error("Failed to write audio data");
             }
-=======
-
-            totalFramesWritten += framesWritten;
-            framesAfterCut -= framesRead;
->>>>>>> de8e1a508d86f85302d557ebbb4302794635d9c0
         }
 
     } catch (const std::exception& e) {
@@ -1378,11 +1177,7 @@ void ProjectWorkWindow::cut()
     SF_INFO testinfo;
     memset(&testinfo, 0, sizeof(testinfo));
     SNDFILE* testfile = sf_open(tempFile.toUtf8().constData(), SFM_READ, &testinfo);
-<<<<<<< HEAD
     if (!testfile) {
-=======
-    if (!testfile || testinfo.frames != totalFramesWritten) {
->>>>>>> de8e1a508d86f85302d557ebbb4302794635d9c0
         QFile::remove(tempFile);
         QMessageBox::critical(this, "Error", "Failed to create valid output file");
         player->setSource(QUrl::fromLocalFile(projectPath));
@@ -1390,11 +1185,7 @@ void ProjectWorkWindow::cut()
     }
     sf_close(testfile);
 
-<<<<<<< HEAD
     updateProjectWithNewFile(tempFile, testinfo.frames, sfinfo.samplerate);
-=======
-    updateProjectWithNewFile(tempFile, totalFramesWritten / sfinfo.samplerate, sfinfo.samplerate);
->>>>>>> de8e1a508d86f85302d557ebbb4302794635d9c0
 
     QMessageBox::information(this, "Success",
                              QString("Audio from %1 to %2 cut successfully\nCut audio is available for pasting")
@@ -1496,11 +1287,7 @@ void ProjectWorkWindow::paste()
         newAudio.append(originalAudio[i]);
     }
 
-<<<<<<< HEAD
     QString tempFile = createTempFilePath("temp_paste_audio");
-=======
-        QString tempFile = createTempFilePath("temp_paste_audio_");
->>>>>>> de8e1a508d86f85302d557ebbb4302794635d9c0
 
     if (QFile::exists(tempFile)) {
         QFile::remove(tempFile);
@@ -1531,14 +1318,7 @@ void ProjectWorkWindow::paste()
         return;
     }
 
-<<<<<<< HEAD
     updateProjectWithNewFile(tempFile, totalFrames, sfinfo.samplerate);
-=======
-    projectPath = tempFile;
-    projectDuration = totalFrames / sfinfo.samplerate;
-
-	updateProjectWithNewFile(projectPath, projectDuration, sfinfo.samplerate);
->>>>>>> de8e1a508d86f85302d557ebbb4302794635d9c0
 
     QMessageBox::information(this, "Success",
                              QString("Audio pasted successfully at position %1")
@@ -1602,11 +1382,7 @@ void ProjectWorkWindow::deleteAction()
         return;
     }
 
-<<<<<<< HEAD
     const int BUFFER_SIZE = 200000;
-=======
-    const int BUFFER_SIZE = 4096;
->>>>>>> de8e1a508d86f85302d557ebbb4302794635d9c0
     QVector<float> buffer(BUFFER_SIZE * sfinfo.channels);
     sf_count_t totalFramesWritten = 0;
 
@@ -1672,11 +1448,7 @@ void ProjectWorkWindow::deleteAction()
     }
     sf_close(testfile);
 
-<<<<<<< HEAD
     updateProjectWithNewFile(tempFile, totalFramesWritten, sfinfo.samplerate);
-=======
-    updateProjectWithNewFile(tempFile, totalFramesWritten / sfinfo.samplerate, sfinfo.samplerate);
->>>>>>> de8e1a508d86f85302d557ebbb4302794635d9c0
     QMessageBox::information(this, "Success",
                              QString("Audio from %1 to %2 deleted successfully")
                                  .arg(QTime::fromMSecsSinceStartOfDay(startMs).toString("mm:ss"))
@@ -1726,11 +1498,7 @@ void ProjectWorkWindow::save()
     }
 
     if ((inSndfile != nullptr) && (outSndfile != nullptr)) {
-<<<<<<< HEAD
         const int BUFFER_SIZE = 200000;
-=======
-        const int BUFFER_SIZE = 4096;
->>>>>>> de8e1a508d86f85302d557ebbb4302794635d9c0
         QVector<float> buffer(BUFFER_SIZE * sfInFileInfo.channels);
         sf_count_t totalFramesWritten = 0;
 
@@ -1958,11 +1726,7 @@ void ProjectWorkWindow::mixRecordedAudioWithOriginal()
     sf_writef_float(outFile, originalData.data(), originalInfo.frames);
     sf_close(outFile);
 
-<<<<<<< HEAD
     updateProjectWithNewFile(mixedFilePath, originalInfo.frames, originalInfo.samplerate);
-=======
-    updateProjectWithNewFile(mixedFilePath, originalInfo.frames / originalInfo.samplerate, originalInfo.samplerate);
->>>>>>> de8e1a508d86f85302d557ebbb4302794635d9c0
 
     if (QFile::exists(recordedFilePath)) {
         QFile::remove(recordedFilePath);
@@ -2019,23 +1783,11 @@ void ProjectWorkWindow::reverse()
 
     sf_count_t framesRead = 0;
     sf_count_t totalFramesRead = 0;
-<<<<<<< HEAD
     const sf_count_t BUFFER_SIZE = 200000;
     QVector<float> buffer(BUFFER_SIZE * sfinfo.channels);
 
     while ((framesRead = sf_readf_float(infile, buffer.data(), BUFFER_SIZE)) > 0) {
         memcpy(&audioData[totalFramesRead * sfinfo.channels], &buffer[0], framesRead * sfinfo.channels * sizeof(float));
-=======
-    const sf_count_t BUFFER_SIZE = 4096;
-    QVector<float> buffer(BUFFER_SIZE * sfinfo.channels);
-
-    while ((framesRead = sf_readf_float(infile, buffer.data(), BUFFER_SIZE)) > 0) {
-        for (int i = 0; i < framesRead * sfinfo.channels; i++) {
-            if (totalFramesRead * sfinfo.channels + i < audioData.size()) {
-                audioData[totalFramesRead * sfinfo.channels + i] = buffer[i];
-            }
-        }
->>>>>>> de8e1a508d86f85302d557ebbb4302794635d9c0
         totalFramesRead += framesRead;
     }
 
@@ -2077,11 +1829,7 @@ void ProjectWorkWindow::reverse()
         return;
     }
 
-<<<<<<< HEAD
     updateProjectWithNewFile(tempFile, totalFrames, sfinfo.samplerate);
-=======
-    updateProjectWithNewFile(tempFile, totalFrames / sfinfo.samplerate, sfinfo.samplerate);
->>>>>>> de8e1a508d86f85302d557ebbb4302794635d9c0
 
     QMessageBox::information(this, "Success", "Audio reversed successfully");
 }
@@ -2162,34 +1910,18 @@ void ProjectWorkWindow::applyEchoEffect()
     qDebug() << "Audio info: samplerate:" << sfinfo.samplerate << "channels:" << sfinfo.channels
              << "totalFrames:" << totalFrames << "processSamples:" << processSamples;
 
-<<<<<<< HEAD
     QVector<float> audioData(totalFrames * sfinfo.channels);
     const int BUFFER_SIZE = 200000;
-=======
-    QVector<float> audioData;
-    const int BUFFER_SIZE = 4096;
->>>>>>> de8e1a508d86f85302d557ebbb4302794635d9c0
     QVector<float> buffer(BUFFER_SIZE * sfinfo.channels);
     sf_count_t totalFramesRead = 0;
 
     try {
-<<<<<<< HEAD
-=======
-        audioData.reserve(totalFrames * sfinfo.channels);
-
->>>>>>> de8e1a508d86f85302d557ebbb4302794635d9c0
         while (true) {
             sf_count_t framesRead = sf_readf_float(infile, buffer.data(), BUFFER_SIZE);
 
             if (framesRead <= 0) break;
 
-<<<<<<< HEAD
             memcpy(&audioData[totalFramesRead * sfinfo.channels], &buffer[0], framesRead * sfinfo.channels * sizeof(float));
-=======
-            for (sf_count_t i = 0; i < framesRead * sfinfo.channels; i++) {
-                audioData.append(buffer[i]);
-            }
->>>>>>> de8e1a508d86f85302d557ebbb4302794635d9c0
 
             totalFramesRead += framesRead;
 
@@ -2230,12 +1962,7 @@ void ProjectWorkWindow::applyEchoEffect()
         return;
     }
 
-<<<<<<< HEAD
     CEchoEffect().apply(audioData, sfinfo.samplerate, sfinfo.channels, startSample, processSamples, delayMs, decay, repetitions);
-=======
-    applyEchoToAudioData(audioData, sfinfo.samplerate, sfinfo.channels,
-                         startSample, processSamples, delayMs, decay, repetitions);
->>>>>>> de8e1a508d86f85302d557ebbb4302794635d9c0
 
     QString tempFile = createTempFilePath("temp_echo_audio");
 
@@ -2259,11 +1986,7 @@ void ProjectWorkWindow::applyEchoEffect()
     }
 
     sf_count_t totalFramesWritten = 0;
-<<<<<<< HEAD
     const int WRITE_BUFFER_SIZE = 200000;
-=======
-    const int WRITE_BUFFER_SIZE = 4096;
->>>>>>> de8e1a508d86f85302d557ebbb4302794635d9c0
 
     try {
         for (sf_count_t i = 0; i < totalFrames; i += WRITE_BUFFER_SIZE) {
@@ -2304,64 +2027,13 @@ void ProjectWorkWindow::applyEchoEffect()
         return;
     }
 
-<<<<<<< HEAD
     updateProjectWithNewFile(tempFile, totalFrames, sfinfo.samplerate);
-=======
-    projectPath = tempFile;
-    projectDuration = totalFrames / sfinfo.samplerate;
-
-    updateProjectWithNewFile(projectPath, projectDuration, sfinfo.samplerate);
->>>>>>> de8e1a508d86f85302d557ebbb4302794635d9c0
 
     QString successMessage = QString("Echo effect applied successfully\nDelay: %1ms, Decay: %2, Repetitions: %3")
                                  .arg(delayMs).arg(decay).arg(repetitions);
     QMessageBox::information(this, "Success", successMessage);
 }
 
-<<<<<<< HEAD
-=======
-void ProjectWorkWindow::applyEchoToAudioData(QVector<float>& audioData, int sampleRate, int channels,
-                                             qint64 startSample, qint64 processSamples,
-                                             double delayMs, double decay, int repetitions)
-{
-    int delaySamples = static_cast<int>((delayMs * sampleRate) / 1000.0);
-
-    if (delaySamples <= 0) {
-        delaySamples = static_cast<int>(0.4 * sampleRate);
-    }
-    if (repetitions <= 0) {
-        repetitions = 4;
-    }
-
-    qDebug() << "Echo: delay=" << delaySamples << "samples (" << delayMs << "ms),"
-             << "decay=" << decay << "reps=" << repetitions;
-
-    QVector<float> outputData = audioData;
-
-    for (int ch = 0; ch < channels; ch++) {
-        QVector<float> delayBuffer(delaySamples * repetitions + 1000, 0.0f);
-        int writePos = 0;
-
-        for (qint64 i = startSample; i < startSample + processSamples; i++) {
-            qint64 idx = i * channels + ch;
-            float inputSample = audioData[idx];
-            float outputSample = inputSample;
-
-            for (int rep = 1; rep <= repetitions; rep++) {
-                int readPos = (writePos - delaySamples * rep + delayBuffer.size()) % delayBuffer.size();
-                float echoSample = delayBuffer[readPos] * static_cast<float>(pow(decay, rep));
-                outputSample += echoSample;
-            }
-            outputSample = qBound(-1.0f, outputSample, 1.0f);
-            outputData[idx] = outputSample;
-            delayBuffer[writePos] = outputSample;
-            writePos = (writePos + 1) % delayBuffer.size();
-        }
-    }
-    audioData = outputData;
-}
-
->>>>>>> de8e1a508d86f85302d557ebbb4302794635d9c0
 void ProjectWorkWindow::applyEqualizerEffect()
 {
     auto selection = waveformWidget->getSelection();
@@ -2447,30 +2119,17 @@ void ProjectWorkWindow::applyEqualizerEffect()
 
     QVector<float> audioData(totalFrames * sfinfo.channels);
 
-<<<<<<< HEAD
     const sf_count_t BUFFER_SIZE = 200000;
-=======
-    const sf_count_t BUFFER_SIZE = 4096;
->>>>>>> de8e1a508d86f85302d557ebbb4302794635d9c0
     QVector<float> buffer(BUFFER_SIZE * sfinfo.channels);
     sf_count_t totalFramesRead = 0;
     sf_count_t framesRead;
 
     try {
         while ((framesRead = sf_readf_float(infile, buffer.data(), BUFFER_SIZE)) > 0) {
-<<<<<<< HEAD
 
             memcpy(&audioData[totalFramesRead * sfinfo.channels], &buffer[0], framesRead * sfinfo.channels * sizeof(float));
             totalFramesRead += framesRead;
 
-=======
-            for (sf_count_t i = 0; i < framesRead * sfinfo.channels; i++) {
-                if (totalFramesRead * sfinfo.channels + i < audioData.size()) {
-                    audioData[totalFramesRead * sfinfo.channels + i] = buffer[i];
-                }
-            }
-            totalFramesRead += framesRead;
->>>>>>> de8e1a508d86f85302d557ebbb4302794635d9c0
             if (totalFramesRead > totalFrames * 2) {
                 qWarning() << "Breaking infinite loop, read too many frames:" << totalFramesRead;
                 break;
@@ -2511,12 +2170,8 @@ void ProjectWorkWindow::applyEqualizerEffect()
         return;
     }
 
-<<<<<<< HEAD
     CEqualizerEffect().apply(audioData, sfinfo.samplerate, sfinfo.channels,
-=======
-    applyEqualizerToAudioData(audioData, sfinfo.samplerate, sfinfo.channels,
->>>>>>> de8e1a508d86f85302d557ebbb4302794635d9c0
-                              startSample, processSamples, lowGain, midGain, highGain);
+                             startSample, processSamples, lowGain, midGain, highGain);
 
     QString tempFile = createTempFilePath("temp_equalizer_audio");
 
@@ -2550,117 +2205,13 @@ void ProjectWorkWindow::applyEqualizerEffect()
         return;
     }
 
-<<<<<<< HEAD
     updateProjectWithNewFile(tempFile, totalFrames, sfinfo.samplerate);
-=======
-    QString oldProjectPath = projectPath;
-    projectPath = tempFile;
-    projectDuration = totalFrames / sfinfo.samplerate;
 
-    updateProjectWithNewFile(projectPath, projectDuration, sfinfo.samplerate);
->>>>>>> de8e1a508d86f85302d557ebbb4302794635d9c0
-    
     QString successMessage = QString("Equalizer applied successfully\nBass: %1 dB, Mid: %2 dB, Treble: %3 dB")
                                  .arg(lowGain).arg(midGain).arg(highGain);
     QMessageBox::information(this, "Success", successMessage);
 }
 
-<<<<<<< HEAD
-=======
-void ProjectWorkWindow::applyEqualizerToAudioData(QVector<float>& audioData, int sampleRate, int channels,
-                                                  qint64 startSample, qint64 processSamples,
-                                                  double lowGain, double midGain, double highGain)
-{
-    double lowGainLinear = pow(10.0, lowGain / 20.0);
-    double midGainLinear = pow(10.0, midGain / 20.0);
-    double highGainLinear = pow(10.0, highGain / 20.0);
-
-    qDebug() << "Equalizer gains (linear): low=" << lowGainLinear << "mid=" << midGainLinear << "high=" << highGainLinear;
-
-    for (int ch = 0; ch < channels; ch++) {
-        double lowX1 = 0.0, lowX2 = 0.0, lowY1 = 0.0, lowY2 = 0.0;
-        double midX1 = 0.0, midX2 = 0.0, midY1 = 0.0, midY2 = 0.0;
-        double highX1 = 0.0, highX2 = 0.0, highY1 = 0.0, highY2 = 0.0;
-
-        for (qint64 i = startSample; i < startSample + processSamples; i++) {
-            qint64 sampleIndex = i * channels + ch;
-
-            if (sampleIndex >= audioData.size()) continue;
-
-            float input = audioData[sampleIndex];
-
-            double lowOutput = applyBiquadFilter(input, lowX1, lowX2, lowY1, lowY2,
-                                                 sampleRate, 250.0, lowGain, "low");
-
-            double midOutput = applyBiquadFilter(input, midX1, midX2, midY1, midY2,
-                                                 sampleRate, 1000.0, midGain, "mid");
-
-            double highOutput = applyBiquadFilter(input, highX1, highX2, highY1, highY2,
-                                                  sampleRate, 4000.0, highGain, "high");
-
-            double output = (lowOutput * lowGainLinear) +
-                            (midOutput * midGainLinear) +
-                            (highOutput * highGainLinear);
-
-            audioData[sampleIndex] = qBound(-1.0f, static_cast<float>(output), 1.0f);
-        }
-    }
-}
-
-double ProjectWorkWindow::applyBiquadFilter(double input, double& x1, double& x2, double& y1, double& y2,
-                                            int sampleRate, double frequency, double gain, const QString& type)
-{
-    double b0, b1, b2, a0, a1, a2;
-
-    double omega = 2.0 * M_PI * frequency / sampleRate;
-    double sinOmega = sin(omega);
-    double cosOmega = cos(omega);
-
-    double A = pow(10.0, gain / 40.0);
-    double alpha = sinOmega / 2.0;
-
-    if (type == "low") {
-        double beta = 2.0 * sqrt(A) * alpha;
-        b0 = A * ((A + 1) - (A - 1) * cosOmega + beta);
-        b1 = 2 * A * ((A - 1) - (A + 1) * cosOmega);
-        b2 = A * ((A + 1) - (A - 1) * cosOmega - beta);
-        a0 = (A + 1) + (A - 1) * cosOmega + beta;
-        a1 = -2 * ((A - 1) + (A + 1) * cosOmega);
-        a2 = (A + 1) + (A - 1) * cosOmega - beta;
-    }
-    else if (type == "mid") {
-        double bandwidth = 1.0;
-        alpha = sinOmega * sinh(log(2.0) / 2.0 * bandwidth * omega / sinOmega);
-        b0 = 1.0 + alpha * A;
-        b1 = -2.0 * cosOmega;
-        b2 = 1.0 - alpha * A;
-        a0 = 1.0 + alpha / A;
-        a1 = -2.0 * cosOmega;
-        a2 = 1.0 - alpha / A;
-    }
-    else if (type == "high") {
-        double beta = 2.0 * sqrt(A) * alpha;
-        b0 = A * ((A + 1) + (A - 1) * cosOmega + beta);
-        b1 = -2 * A * ((A - 1) + (A + 1) * cosOmega);
-        b2 = A * ((A + 1) + (A - 1) * cosOmega - beta);
-        a0 = (A + 1) - (A - 1) * cosOmega + beta;
-        a1 = 2 * ((A - 1) - (A + 1) * cosOmega);
-        a2 = (A + 1) - (A - 1) * cosOmega - beta;
-    }
-    else {
-        return input;
-    }
-    b0 /= a0; b1 /= a0; b2 /= a0;
-    a1 /= a0; a2 /= a0;
-    double output = b0 * input + b1 * x1 + b2 * x2 - a1 * y1 - a2 * y2;
-    x2 = x1;
-    x1 = input;
-    y2 = y1;
-    y1 = output;
-    return output;
-}
-
->>>>>>> de8e1a508d86f85302d557ebbb4302794635d9c0
 void ProjectWorkWindow::applyNoiseReduction()
 {
     auto selection = waveformWidget->getSelection();
@@ -2757,11 +2308,7 @@ void ProjectWorkWindow::applyNoiseReduction()
 
     QVector<float> audioData(totalFrames * sfinfo.channels);
 
-<<<<<<< HEAD
     const sf_count_t BUFFER_SIZE = 200000;
-=======
-    const sf_count_t BUFFER_SIZE = 4096;
->>>>>>> de8e1a508d86f85302d557ebbb4302794635d9c0
     QVector<float> buffer(BUFFER_SIZE * sfinfo.channels);
     sf_count_t totalFramesRead = 0;
 
@@ -2773,16 +2320,7 @@ void ProjectWorkWindow::applyNoiseReduction()
             break;
         }
 
-<<<<<<< HEAD
         memcpy(&audioData[totalFramesRead * sfinfo.channels], &buffer[0], framesRead * sfinfo.channels * sizeof(float));
-=======
-        for (sf_count_t i = 0; i < framesRead * sfinfo.channels; i++) {
-            if (totalFramesRead * sfinfo.channels + i < audioData.size()) {
-                audioData[totalFramesRead * sfinfo.channels + i] = buffer[i];
-            }
-        }
-
->>>>>>> de8e1a508d86f85302d557ebbb4302794635d9c0
         totalFramesRead += framesRead;
 
         qDebug() << "Read" << framesRead << "frames, total:" << totalFramesRead;
@@ -2819,16 +2357,8 @@ void ProjectWorkWindow::applyNoiseReduction()
 
     qDebug() << "Applying noise reduction to" << processSamples << "samples";
 
-<<<<<<< HEAD
     CNoiseReductionEffect().apply(audioData, sfinfo.samplerate, sfinfo.channels, startSample, processSamples,
-                                   noiseThreshold, reductionStrength, smoothing);
-=======
-    applyNoiseReductionToAudioData(audioData, sfinfo.samplerate, sfinfo.channels,
-                                   startSample, processSamples,
-                                   static_cast<float>(noiseThreshold),
-                                   static_cast<float>(reductionStrength),
-                                   static_cast<float>(smoothing));
->>>>>>> de8e1a508d86f85302d557ebbb4302794635d9c0
+                                  noiseThreshold, reductionStrength, smoothing);
 
 
     QString tempFile = createTempFilePath("temp_noise_reduction");
@@ -2861,57 +2391,14 @@ void ProjectWorkWindow::applyNoiseReduction()
         return;
     }
 
-<<<<<<< HEAD
     updateProjectWithNewFile(tempFile, totalFrames, sfinfo.samplerate);
-=======
-    QString oldProjectPath = projectPath;
-    projectPath = tempFile;
-    projectDuration = totalFrames / sfinfo.samplerate;
 
-    updateProjectWithNewFile(projectPath, projectDuration, sfinfo.samplerate);
->>>>>>> de8e1a508d86f85302d557ebbb4302794635d9c0
-    
     QMessageBox::information(this, "Success",
                              QString("Noise reduction applied successfully\n"
                                      "Processed %1 samples with %2 method")
                                  .arg(processSamples).arg(method));
 }
 
-<<<<<<< HEAD
-=======
-void ProjectWorkWindow::applyNoiseReductionToAudioData(QVector<float>& audioData, int sampleRate, int channels,
-                                                       qint64 startSample, qint64 processSamples,
-                                                       float noiseThreshold, float reductionStrength,
-                                                       float smoothing)
-{
-    qDebug() << "Applying noise reduction: threshold=" << noiseThreshold
-             << "strength=" << reductionStrength << "smoothing=" << smoothing;
-
-    for (int ch = 0; ch < channels; ch++) {
-        float prevValue = 0.0f;
-
-        for (qint64 i = startSample; i < startSample + processSamples; i++) {
-            qint64 index = i * channels + ch;
-            if (index >= audioData.size()) continue;
-
-            float currentValue = audioData[index];
-
-            float smoothedValue = smoothing * prevValue + (1.0f - smoothing) * currentValue;
-
-            if (std::abs(smoothedValue) < noiseThreshold) {
-                audioData[index] = smoothedValue * (1.0f - reductionStrength);
-            } else {
-                audioData[index] = smoothedValue;
-            }
-
-            prevValue = audioData[index];
-        }
-    }
-
-    qDebug() << "Noise reduction completed for" << processSamples << "samples";
-}
-
->>>>>>> de8e1a508d86f85302d557ebbb4302794635d9c0
 void ProjectWorkWindow::applyFadeIn()
 {
     FadeDialog dialog(FadeDialog::FadeIn, this);
@@ -2994,39 +2481,12 @@ void ProjectWorkWindow::applyFadeOut()
     applyFadeEffect(false, fadeDuration, curveType, applyToSelection, startMs, endMs);
 }
 
-<<<<<<< HEAD
 void ProjectWorkWindow::applyFadeEffect(bool isFadeIn, double fadeDuration, const QString& curveTypeName,
                                         bool applyToSelection, qint64 startMs, qint64 endMs)
 {
 
     clearFutureHistory();
     stopPlayerAndResetUI();
-=======
-void ProjectWorkWindow::applyFadeEffect(bool isFadeIn, double fadeDuration, const QString& curveType,
-                                        bool applyToSelection, qint64 startMs, qint64 endMs)
-{
-    AudioState currentState;
-    currentState.filePath = projectPath;
-    currentState.startMs = 0;
-    currentState.endMs = projectDuration * 1000;
-    currentState.timestamp = QDateTime::currentDateTime();
-
-    while (undoHistory.size() > currentHistoryIndex + 1) {
-        AudioState stateToRemove = undoHistory.last();
-        if (stateToRemove.filePath != originalFilePath && QFile::exists(stateToRemove.filePath)) {
-            QFile::remove(stateToRemove.filePath);
-        }
-        undoHistory.removeLast();
-    }
-
-    undoHistory.append(currentState);
-    currentHistoryIndex++;
-    ui->undoButton->setEnabled(true);
-    ui->redoButton->setEnabled(false);
-
-    player->stop();
-    player->setSource(QUrl());
->>>>>>> de8e1a508d86f85302d557ebbb4302794635d9c0
 
     SF_INFO sfinfo;
     memset(&sfinfo, 0, sizeof(sfinfo));
@@ -3081,11 +2541,7 @@ void ProjectWorkWindow::applyFadeEffect(bool isFadeIn, double fadeDuration, cons
 
     QVector<float> audioData(totalFrames * sfinfo.channels);
 
-<<<<<<< HEAD
     const sf_count_t BUFFER_SIZE = 200000;
-=======
-    const sf_count_t BUFFER_SIZE = 4096;
->>>>>>> de8e1a508d86f85302d557ebbb4302794635d9c0
     QVector<float> buffer(BUFFER_SIZE * sfinfo.channels);
     sf_count_t totalFramesRead = 0;
 
@@ -3097,16 +2553,7 @@ void ProjectWorkWindow::applyFadeEffect(bool isFadeIn, double fadeDuration, cons
             break;
         }
 
-<<<<<<< HEAD
         memcpy(&audioData[totalFramesRead * sfinfo.channels], &buffer[0], framesRead * sfinfo.channels * sizeof(float));
-=======
-        for (sf_count_t i = 0; i < framesRead * sfinfo.channels; i++) {
-            if (totalFramesRead * sfinfo.channels + i < audioData.size()) {
-                audioData[totalFramesRead * sfinfo.channels + i] = buffer[i];
-            }
-        }
-
->>>>>>> de8e1a508d86f85302d557ebbb4302794635d9c0
         totalFramesRead += framesRead;
     }
 
@@ -3139,7 +2586,6 @@ void ProjectWorkWindow::applyFadeEffect(bool isFadeIn, double fadeDuration, cons
         return;
     }
 
-<<<<<<< HEAD
     CFadeEffect::ECurveType curveType = CFadeEffect::resolve(curveTypeName);
     if (curveType != CFadeEffect::UNDEFINED) {
         if (isFadeIn) {
@@ -3152,18 +2598,6 @@ void ProjectWorkWindow::applyFadeEffect(bool isFadeIn, double fadeDuration, cons
     }
 
     QString tempFile = createTempFilePath(QString("temp_fade_") + (isFadeIn ? "in" : "out"));
-=======
-    if (isFadeIn) {
-        applyFadeInToAudioData(audioData, sfinfo.channels, startSample, fadeSamples, curveType);
-    } else {
-        applyFadeOutToAudioData(audioData, sfinfo.channels, endSample - fadeSamples, fadeSamples, curveType);
-    }
-
-    QString tempDir = QFileInfo(projectPath).absolutePath();
-    QString tempFile = tempDir + QString("/temp_fade%1_audio_%2.wav")
-                                     .arg(isFadeIn ? "in" : "out")
-                                     .arg(QDateTime::currentDateTime().toString("yyyyMMdd_hhmmss"));
->>>>>>> de8e1a508d86f85302d557ebbb4302794635d9c0
 
     if (QFile::exists(tempFile)) {
         QFile::remove(tempFile);
@@ -3179,11 +2613,7 @@ void ProjectWorkWindow::applyFadeEffect(bool isFadeIn, double fadeDuration, cons
     }
 
     sf_count_t totalFramesWritten = 0;
-<<<<<<< HEAD
     const sf_count_t WRITE_BUFFER_SIZE = 200000;
-=======
-    const sf_count_t WRITE_BUFFER_SIZE = 4096;
->>>>>>> de8e1a508d86f85302d557ebbb4302794635d9c0
 
     for (sf_count_t i = 0; i < totalFrames; i += WRITE_BUFFER_SIZE) {
         sf_count_t framesThisTime = qMin(WRITE_BUFFER_SIZE, totalFrames - i);
@@ -3221,16 +2651,8 @@ void ProjectWorkWindow::applyFadeEffect(bool isFadeIn, double fadeDuration, cons
         return;
     }
 
-<<<<<<< HEAD
     updateProjectWithNewFile(tempFile, totalFrames, sfinfo.samplerate);
-=======
-    QString oldProjectPath = projectPath;
-    projectPath = tempFile;
-    projectDuration = totalFrames / sfinfo.samplerate;
 
-    updateProjectWithNewFile(projectPath, projectDuration, sfinfo.samplerate);
->>>>>>> de8e1a508d86f85302d557ebbb4302794635d9c0
-    
     QString effectName = isFadeIn ? "Fade in" : "Fade out";
     QMessageBox::information(this, "Success",
                              QString("%1 applied successfully\nDuration: %2 seconds, Curve: %3")
@@ -3239,7 +2661,6 @@ void ProjectWorkWindow::applyFadeEffect(bool isFadeIn, double fadeDuration, cons
                                  .arg(curveType));
 }
 
-<<<<<<< HEAD
 void ProjectWorkWindow::zoomIn()
 {
     if (waveformWidget) {
@@ -3264,94 +2685,6 @@ void ProjectWorkWindow::on_zoomOutButton_clicked()
     zoomOut();
 }
 
-=======
-void ProjectWorkWindow::applyFadeInToAudioData(QVector<float>& audioData, int channels,
-                                               qint64 startSample, qint64 fadeSamples,
-                                               const QString& curveType)
-{
-    for (qint64 i = 0; i < fadeSamples; i++) {
-        double progress = static_cast<double>(i) / fadeSamples;
-        double gain = calculateFadeGain(progress, curveType, true);
-
-        for (int ch = 0; ch < channels; ch++) {
-            qint64 index = (startSample + i) * channels + ch;
-            if (index < audioData.size()) {
-                audioData[index] *= static_cast<float>(gain);
-            }
-        }
-    }
-}
-
-void ProjectWorkWindow::applyFadeOutToAudioData(QVector<float>& audioData, int channels,
-                                                qint64 startSample, qint64 fadeSamples,
-                                                const QString& curveType)
-{
-    for (qint64 i = 0; i < fadeSamples; i++) {
-        double progress = static_cast<double>(i) / fadeSamples;
-        double gain = calculateFadeGain(progress, curveType, false);
-
-        for (int ch = 0; ch < channels; ch++) {
-            qint64 index = (startSample + i) * channels + ch;
-            if (index < audioData.size()) {
-                audioData[index] *= static_cast<float>(gain);
-            }
-        }
-    }
-}
-
-double ProjectWorkWindow::calculateFadeGain(double progress, const QString& curveType, bool isFadeIn)
-{
-    double gain = progress;
-
-    if (isFadeIn) {
-        if (curveType == "linear") {
-            gain = progress;
-        } else if (curveType == "exponential") {
-            gain = progress * progress;
-        } else if (curveType == "logarithmic") {
-            gain = log10(1 + progress * 9);
-        } else if (curveType == "scurve") {
-            gain = progress < 0.5 ? 2 * progress * progress : 1 - 2 * (1 - progress) * (1 - progress);
-        } else if (curveType == "cosine") {
-            gain = (1 - cos(progress * M_PI)) / 2;
-        }
-    } else {
-        if (curveType == "linear") {
-            gain = 1.0 - progress;
-        } else if (curveType == "exponential") {
-            gain = (1.0 - progress) * (1.0 - progress);
-        } else if (curveType == "logarithmic") {
-            gain = 1.0 - log10(1 + progress * 9);
-        } else if (curveType == "scurve") {
-            gain = progress < 0.5 ? 1 - 2 * progress * progress : 2 * (1 - progress) * (1 - progress);
-        } else if (curveType == "cosine") {
-            gain = (1 + cos(progress * M_PI)) / 2;
-        }
-    }
-    return qBound(0.0, gain, 1.0);
-}
-
-// void ProjectWorkWindow::zoomIn()
-// {
-//     //TODO
-// }
-
-// void ProjectWorkWindow::on_zoomInButton_licked()
-// {
-//     zoomIn();
-// }
-
-// void ProjectWorkWindow::zoomOut()
-// {
-//     //TODO
-// }
-
-// void ProjectWorkWindow::on_zoomOutButton_licked()
-// {
-//     zoomOut();
-// }
-
->>>>>>> de8e1a508d86f85302d557ebbb4302794635d9c0
 void ProjectWorkWindow::newFile()
 {
     this->close();
@@ -3396,11 +2729,7 @@ void ProjectWorkWindow::updateProjectInfo(const QString& filePath)
 
     if (file) {
         projectName = QFileInfo(filePath).fileName();
-<<<<<<< HEAD
         projectDuration = double(sfinfo.frames) / sfinfo.samplerate;
-=======
-        projectDuration = sfinfo.frames / sfinfo.samplerate;
->>>>>>> de8e1a508d86f85302d557ebbb4302794635d9c0
         projectSamplingRate = sfinfo.samplerate;
         projectChannelsCount = sfinfo.channels;
         projectFormat = getFormatDescription(sfinfo.format);
@@ -3424,6 +2753,10 @@ void ProjectWorkWindow::updateProjectInfo(const QString& filePath)
 
         ui->undoButton->setEnabled(false);
         ui->redoButton->setEnabled(false);
+
+        ui->durationLabel->setText(getPositionLabel(projectDuration, projectDuration));
+        ui->currentTimeLabel->setText(getPositionLabel(0.0, projectDuration));
+        ui->timelineSlider->setRange(0, projectDuration * 1000);
 
         sf_close(file);
     }
@@ -3500,11 +2833,7 @@ void ProjectWorkWindow::closeFile()
     ui->timelineSlider->setRange(0, 0);
     ui->timelineSlider->setValue(0);
 
-<<<<<<< HEAD
     QVector<float> emptyData;
-=======
-    QVector<qint16> emptyData;
->>>>>>> de8e1a508d86f85302d557ebbb4302794635d9c0
     if (waveformWidget) {
         waveformWidget->setAudioData(emptyData);
         waveformWidget->setDuration(0);
@@ -3577,14 +2906,7 @@ void ProjectWorkWindow::saveAs()
         if (fileName.endsWith(".flac", Qt::CaseInsensitive)) {
             format = SF_FORMAT_FLAC | SF_FORMAT_PCM_16;
         } else if (fileName.endsWith(".mp3", Qt::CaseInsensitive)) {
-<<<<<<< HEAD
             format = SF_FORMAT_MPEG | SF_FORMAT_MPEG_LAYER_III;
-=======
-            convertToMP3(projectPath, fileName, 0, projectDuration * 1000);
-            updateProjectInfo(fileName);
-            QMessageBox::information(this, "Save As", "File saved as MP3 successfully");
-            return;
->>>>>>> de8e1a508d86f85302d557ebbb4302794635d9c0
         }
 
         if (convertAudioFormat(projectPath, fileName, format)) {
@@ -3615,11 +2937,7 @@ bool ProjectWorkWindow::convertAudioFormat(const QString& inputPath, const QStri
         return false;
     }
 
-<<<<<<< HEAD
     const int BUFFER_SIZE = 200000;
-=======
-    const int BUFFER_SIZE = 4096;
->>>>>>> de8e1a508d86f85302d557ebbb4302794635d9c0
     QVector<float> buffer(BUFFER_SIZE * sfinfo.channels);
 
     sf_count_t framesRead;
@@ -3649,7 +2967,6 @@ void ProjectWorkWindow::saveSelectionAs()
                                                     "WAV (*.wav);;FLAC (*.flac);;MP3 (*.mp3)");
 
     if (!fileName.isEmpty()) {
-<<<<<<< HEAD
         SF_INFO sfinfo;
         memset(&sfinfo, 0, sizeof(sfinfo));
         SNDFILE* infile = sf_open(projectPath.toUtf8().constData(), SFM_READ, &sfinfo);
@@ -3700,60 +3017,6 @@ void ProjectWorkWindow::saveSelectionAs()
         sf_close(infile);
         sf_close(outfile);
 
-=======
-        if (fileName.endsWith(".mp3", Qt::CaseInsensitive)) {
-            convertToMP3(projectPath, fileName, startMs, endMs);
-        } else {
-            SF_INFO sfinfo;
-            memset(&sfinfo, 0, sizeof(sfinfo));
-            SNDFILE* infile = sf_open(projectPath.toUtf8().constData(), SFM_READ, &sfinfo);
-
-            if (!infile) {
-                QMessageBox::critical(this, "Error", "Cannot open audio file");
-                return;
-            }
-
-            qint64 startSample = (startMs * sfinfo.samplerate) / 1000;
-            qint64 endSample = (endMs * sfinfo.samplerate) / 1000;
-            qint64 selectionSamples = endSample - startSample;
-
-            int format = SF_FORMAT_WAV | SF_FORMAT_PCM_16;
-            if (fileName.endsWith(".flac", Qt::CaseInsensitive)) {
-                format = SF_FORMAT_FLAC | SF_FORMAT_PCM_16;
-            }
-
-            SF_INFO outinfo = sfinfo;
-            outinfo.format = format;
-            outinfo.frames = selectionSamples;
-
-            SNDFILE* outfile = sf_open(fileName.toUtf8().constData(), SFM_WRITE, &outinfo);
-            if (!outfile) {
-                sf_close(infile);
-                QMessageBox::critical(this, "Error", "Cannot create output file");
-                return;
-            }
-
-            sf_seek(infile, startSample, SEEK_SET);
-
-            const int BUFFER_SIZE = 4096;
-            QVector<float> buffer(BUFFER_SIZE * sfinfo.channels);
-            sf_count_t totalFramesWritten = 0;
-
-            while (totalFramesWritten < selectionSamples) {
-                sf_count_t framesToRead = qMin(BUFFER_SIZE, selectionSamples - totalFramesWritten);
-                sf_count_t framesRead = sf_readf_float(infile, buffer.data(), framesToRead);
-
-                if (framesRead <= 0) break;
-
-                sf_writef_float(outfile, buffer.data(), framesRead);
-                totalFramesWritten += framesRead;
-            }
-
-            sf_close(infile);
-            sf_close(outfile);
-        }
-
->>>>>>> de8e1a508d86f85302d557ebbb4302794635d9c0
         QMessageBox::information(this, "Save Selection As",
                                  QString("Selection saved as: %1\nFrom %2 to %3")
                                      .arg(fileName)

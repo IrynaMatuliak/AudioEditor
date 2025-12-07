@@ -24,6 +24,39 @@ MainWindow::MainWindow(QWidget *parent)
     , tmpDirectory()
 {
     ui->setupUi(this);
+
+    QString messageBoxStyle =
+        "QMessageBox {"
+        "   background-color: #333333;"
+        "   color: white;"
+        "   border: 1px solid #555555;"
+        "}"
+        "QMessageBox QLabel {"
+        "   color: white;"
+        "   padding: 5px;"
+        "}"
+        "QMessageBox QPushButton {"
+        "   background-color: #555555;"
+        "   color: white;"
+        "   border: 1px solid #777777;"
+        "   padding: 8px 15px;"
+        "   min-width: 70px;"
+        "   border-radius: 3px;"
+        "   font-weight: bold;"
+        "}"
+        "QMessageBox QPushButton:hover {"
+        "   background-color: #666666;"
+        "   border-color: #888888;"
+        "}"
+        "QMessageBox QPushButton:pressed {"
+        "   background-color: #444444;"
+        "   border-color: #666666;"
+        "}"
+        "QMessageBox QPushButton:focus {"
+        "   outline: none;"
+        "   border: 2px solid #0078d7;"
+        "}";
+    qApp->setStyleSheet(messageBoxStyle);
     
     QCoreApplication::setOrganizationName("KPI");
     QCoreApplication::setOrganizationDomain("aeditor.kpi.edu.ua");
@@ -33,6 +66,10 @@ MainWindow::MainWindow(QWidget *parent)
     appSettings.setValue("project/tempFilePath", tmpDirectory.path());
     if (!tmpDirectory.isValid()) {
         //error?
+        QMessageBox::critical(nullptr,
+                              "Error",
+                              "Failed to create temporary directory.");
+        return;
     }
 
     QWidget *centralWidget = new QWidget(this);

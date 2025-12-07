@@ -362,11 +362,7 @@ void MenuBarManager::onZoomIn()
         QMessageBox::warning(nullptr, "Error", "No main window available");
         return;
     }
-<<<<<<< HEAD
     mainWindow->zoomIn();
-=======
-    //mainWindow->zoomIn();
->>>>>>> de8e1a508d86f85302d557ebbb4302794635d9c0
 }
 
 void MenuBarManager::onZoomOut()
@@ -375,11 +371,7 @@ void MenuBarManager::onZoomOut()
         QMessageBox::warning(nullptr, "Error", "No main window available");
         return;
     }
-<<<<<<< HEAD
     mainWindow->zoomOut();
-=======
-    //mainWindow->zoomOut();
->>>>>>> de8e1a508d86f85302d557ebbb4302794635d9c0
 }
 
 void MenuBarManager::createControlMenu()

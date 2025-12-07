@@ -46,8 +46,8 @@ void NoiseReductionDialog::setupUI()
     methodComboBox = new QComboBox();
     methodComboBox->setObjectName("methodComboBox");
     methodComboBox->addItem("Spectral Subtraction", "spectral");
-    methodComboBox->addItem("Wiener Filter", "wiener");
-    methodComboBox->addItem("Adaptive Filter", "adaptive");
+    // methodComboBox->addItem("Wiener Filter", "wiener");
+    // methodComboBox->addItem("Adaptive Filter", "adaptive");
     basicLayout->addRow(methodLabel, methodComboBox);
 
     QLabel *thresholdLabel = new QLabel("Noise Threshold:");

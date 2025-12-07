@@ -13,11 +13,7 @@ public:
 
     enum Handle { NoHandle, StartHandle, EndHandle };
 
-<<<<<<< HEAD
     void setAudioData(const QVector<float> &data);
-=======
-    void setAudioData(const QVector<qint16> &data);
->>>>>>> de8e1a508d86f85302d557ebbb4302794635d9c0
     void setDuration(qint64 durationMs);
     void setPosition(qint64 positionMs);
 
@@ -41,14 +37,10 @@ protected:
     void mousePressEvent(QMouseEvent *event) override;
     void mouseMoveEvent(QMouseEvent *event) override;
     void mouseReleaseEvent(QMouseEvent *event) override;
-<<<<<<< HEAD
 
     void paintEvent(QPaintEvent *event) override;
     void paintTimeMarkers(QPainter &painter, int w, int h, const QColor& scaleColor);
 
-=======
-    void paintEvent(QPaintEvent *event) override;
->>>>>>> de8e1a508d86f85302d557ebbb4302794635d9c0
     void resizeEvent(QResizeEvent *event) override;
     void wheelEvent(QWheelEvent *event) override;
 
@@ -60,7 +52,6 @@ private:
     void ensurePositionVisible(qint64 positionMs);
     int getOptimalTimeInterval() const;
 
-<<<<<<< HEAD
     QVector<float> m_audioData;
     qint64 m_durationMs = 0;
     qint64 m_positionMs = 0;
@@ -69,12 +60,6 @@ private:
     QVector<float> m_peaks;
 
 
-=======
-    QVector<qint16> m_audioData;
-    qint64 m_durationMs = 0;
-    qint64 m_positionMs = 0;
-    QVector<float> m_peaks;
->>>>>>> de8e1a508d86f85302d557ebbb4302794635d9c0
     bool m_dragging = false;
     qint64 m_lastUserPosition = -1;
     qint64 m_selectionStartMs = 0;

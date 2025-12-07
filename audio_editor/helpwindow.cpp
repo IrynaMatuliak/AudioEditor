@@ -233,16 +233,10 @@ void HelpWindow::setupContent()
 <h2 style="color: #cccccc; font-size: 22px; margin-bottom: 15px;">Editing Tools</h2>
 <ul style="color: #cccccc;">
 <li>Cut, Copy, Paste</li>
-<<<<<<< HEAD
 <li>Trim and Delete</li>
 <li>Zoom In/Out</li>
 <li>Volume Adjustment</li>
 <li>Speed Adjustment</li>
-=======
-<li>Trim and Split</li>
-<li>Fade In/Out</li>
-<li>Volume Adjustment</li>
->>>>>>> de8e1a508d86f85302d557ebbb4302794635d9c0
 </ul>
 </div>
 )";
@@ -255,16 +249,9 @@ void HelpWindow::setupContent()
 <h2 style="color: #cccccc; font-size: 22px; margin-bottom: 15px;">Common Effects</h2>
 <ul style="color: #cccccc;">
 <li>Equalizer</li>
-<<<<<<< HEAD
 <li>Reverse</li>
 <li>Noise Reduction</li>
 <li>Fade In/Out</li>
-=======
-<li>Reverb</li>
-<li>Compression</li>
-<li>Noise Reduction</li>
-<li>Pitch Correction</li>
->>>>>>> de8e1a508d86f85302d557ebbb4302794635d9c0
 </ul>
 </div>
 
@@ -281,15 +268,9 @@ void HelpWindow::setupContent()
 <div style="background-color: #151515; border-radius: 8px; padding: 20px; margin: 15px 0; border: 1px solid #2a2a2a;">
 <h2 style="color: #cccccc; font-size: 22px; margin-bottom: 15px;">Supported Formats</h2>
 <ul style="color: #cccccc;">
-<<<<<<< HEAD
 <li>WAV, MP3, FLAC</li>
 <h2 style="color: #cccccc; font-size: 22px; margin-bottom: 15px;">Export Formats</h2>
 <li>WAV, MP3, FLAC</li>
-=======
-<li>WAV, MP3, FLAC, AAC</li>
-<li>Project Files (.aup)</li>
-<li>Export Formats</li>
->>>>>>> de8e1a508d86f85302d557ebbb4302794635d9c0
 </ul>
 </div>
 

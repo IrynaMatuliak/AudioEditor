@@ -45,9 +45,9 @@
    <widget class="QLabel" name="durationLabel">
     <property name="geometry">
      <rect>
-      <x>920</x>
+      <x>790</x>
       <y>60</y>
-      <width>131</width>
+      <width>261</width>
       <height>41</height>
      </rect>
     </property>

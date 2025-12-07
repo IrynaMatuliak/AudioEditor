@@ -34,6 +34,7 @@ double CFadeInEffect::calculateFadeGain(double progress, ECurveType curveType)
             gain = log10(1 + progress * 9);
             break;
         case ECurveType::SCURVE:
+            // First half: parabola pointing upwards, second half: inverse parabola
             gain = (progress < 0.5) ? (2 * progress * progress) : (1 - 2 * (1 - progress) * (1 - progress));
             break;
         case ECurveType::COSINE:

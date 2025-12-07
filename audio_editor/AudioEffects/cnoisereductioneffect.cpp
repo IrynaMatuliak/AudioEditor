@@ -89,7 +89,6 @@ std::vector<float> CNoiseReductionEffect::spectralNoiseReduction(const std::vect
             frameData[i] = input[start + i] * window[i];
         }
 
-        // FFT
         fft(frameData);
 
         std::vector<std::complex<float>> processedFrame(fftSize);

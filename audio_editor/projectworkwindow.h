@@ -20,10 +20,6 @@
 #include <QAudioFormat>
 #include <QMediaFormat>
 #include <QVBoxLayout>
-<<<<<<< HEAD
-=======
-#include <complex>
->>>>>>> de8e1a508d86f85302d557ebbb4302794635d9c0
 
 namespace Ui {
 class ProjectWorkWindow;
@@ -65,13 +61,8 @@ public:
     void saveAs();
     void saveSelectionAs();
     void exitApplication();
-<<<<<<< HEAD
     void zoomIn();
     void zoomOut();
-=======
-    // void zoomIn();
-    // void zoomOut();
->>>>>>> de8e1a508d86f85302d557ebbb4302794635d9c0
 
 signals:
     void returnToMainWindow();
@@ -106,11 +97,8 @@ private slots:
     void on_volumeSlider_valueChanged(int value);
     void updateVolumeIcon(int volume);
     void on_helpButton_clicked();
-<<<<<<< HEAD
     void on_zoomOutButton_clicked();
     void on_zoomInButton_clicked();
-=======
->>>>>>> de8e1a508d86f85302d557ebbb4302794635d9c0
 
 private:
 
@@ -208,19 +196,11 @@ private:
     void loadAudioForVisualization(const QString &filePath);
     QVector<float> resampleAudio(const QVector<float>& audioData, int originalSampleRate, int targetSampleRate, int channels);
     void mixRecordedAudioWithOriginal();
-<<<<<<< HEAD
-=======
-    void convertToMP3(const QString& inputPath, const QString& outputPath, int startMs, int endMs);
->>>>>>> de8e1a508d86f85302d557ebbb4302794635d9c0
     QString getFormatFromSFInfo(const SF_INFO& info);
     void reverseAudioData(QVector<float>& audioData, int channels, sf_count_t totalFrames);
 
     void clearFutureHistory();
-<<<<<<< HEAD
     void updateProjectWithNewFile(const QString& newFilePath, qint64 framesCount, int sampleRate);
-=======
-    void updateProjectWithNewFile(const QString& newFilePath, double newDurationSec, int sampleRate);
->>>>>>> de8e1a508d86f85302d557ebbb4302794635d9c0
 
     QString createTempFilePath(const QString& prefix);
     void stopPlayerAndResetUI();
@@ -229,24 +209,9 @@ private:
     void showErrorMessage(const QString& message);
     bool waitForMediaLoad(int timeoutMs = 3000);
     void reloadAudioVisualization();
-<<<<<<< HEAD
 
     void applyFadeEffect(bool isFadeIn, double fadeDuration, const QString& curveTypeName, bool applyToSelection, qint64 startMs, qint64 endMs);
 
-=======
-    void applyEchoToAudioData(QVector<float>& audioData, int sampleRate, int channels, qint64 startSample, qint64 processSamples,
-                              double delayMs, double decay, int repetitions);
-    void applyEqualizerToAudioData(QVector<float>& audioData, int sampleRate, int channels, qint64 startSample, qint64 processSamples,
-                                   double lowGain, double midGain, double highGain);
-    double applyBiquadFilter(double input, double& x1, double& x2, double& y1, double& y2,
-                             int sampleRate, double frequency, double gain, const QString& type);
-    void applyNoiseReductionToAudioData(QVector<float>& audioData, int sampleRate, int channels, qint64 startSample, qint64 processSamples,
-                                        float noiseThreshold, float reductionStrength, float smoothing);
-    void applyFadeEffect(bool isFadeIn, double fadeDuration, const QString& curveType, bool applyToSelection, qint64 startMs, qint64 endMs);
-    void applyFadeInToAudioData(QVector<float>& audioData, int channels, qint64 startSample, qint64 fadeSamples, const QString& curveType);
-    void applyFadeOutToAudioData(QVector<float>& audioData, int channels, qint64 startSample, qint64 fadeSamples,const QString& curveType);
-    double calculateFadeGain(double progress, const QString& curveType, bool isFadeIn);
->>>>>>> de8e1a508d86f85302d557ebbb4302794635d9c0
     void updateProjectInfo(const QString& filePath);
     QString getFormatDescription(int format);
     bool convertAudioFormat(const QString& inputPath, const QString& outputPath, int format);

@@ -80,7 +80,7 @@ color: white;
      </property>
     </item>
    </widget>
-   <widget class="QPushButton" name="OKCreateProjectButton">
+   <widget class="QPushButton" name="createButton">
     <property name="geometry">
      <rect>
       <x>780</x>
@@ -107,7 +107,7 @@ QPushButton:hover {
 }</string>
     </property>
     <property name="text">
-     <string>OK</string>
+     <string>Create</string>
     </property>
    </widget>
    <widget class="QTextEdit" name="projectNameInput">
@@ -331,7 +331,7 @@ QPushButton:hover {
      <x>0</x>
      <y>0</y>
      <width>1070</width>
-     <height>22</height>
+     <height>21</height>
     </rect>
    </property>
   </widget>
