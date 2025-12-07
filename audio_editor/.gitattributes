@@ -1,3 +1,2 @@
-libs/** linguist-vendored
-lame/** linguist-vendored
-libsndfile/** linguist-vendored
+libs/lame/** linguist-vendored
+libs/libsndfile/** linguist-vendored
