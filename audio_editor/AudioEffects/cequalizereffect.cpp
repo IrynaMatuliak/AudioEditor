@@ -46,17 +46,18 @@ void CEqualizerEffect::apply(QVector<float>& audioData, int sampleRate, int chan
 double CEqualizerEffect::applyBiquadFilter(double input, double& x1, double& x2, double& y1, double& y2,
                                            int sampleRate, double frequency, double gain, FilterType type)
 {
-    double b0, b1, b2, a0, a1, a2;
+    double b0, b1, b2, a0, a1, a2; // coefficients of a biquad filter, describe its frequency response
 
-    double omega = 2.0 * M_PI * frequency / sampleRate;
+    double omega = 2.0 * M_PI * frequency / sampleRate; // Normalized frequency in radians
     double sinOmega = sin(omega);
     double cosOmega = cos(omega);
 
-    double A = pow(10.0, gain / 40.0);
-    double alpha = sinOmega / 2.0;
+    double A = pow(10.0, gain / 40.0); // gain on a linear scale
+    double alpha = sinOmega / 2.0; // defines the filter bandwidth
 
+    // low shelf filter
     if (type == FilterType::LOW) {
-        double beta = 2.0 * sqrt(A) * alpha;
+        double beta = 2.0 * sqrt(A) * alpha; // combines the effect of gain and bandwidth
         b0 = A * ((A + 1) - (A - 1) * cosOmega + beta);
         b1 = 2 * A * ((A - 1) - (A + 1) * cosOmega);
         b2 = A * ((A + 1) - (A - 1) * cosOmega - beta);
@@ -64,9 +65,11 @@ double CEqualizerEffect::applyBiquadFilter(double input, double& x1, double& x2,
         a1 = -2 * ((A - 1) + (A + 1) * cosOmega);
         a2 = (A + 1) + (A - 1) * cosOmega - beta;
     }
+    // peak filter
+    // Boosts/attenuates a narrow band of frequencies around the center
     else if (type == FilterType::MID) {
-        double bandwidth = 1.0;
-        alpha = sinOmega * sinh(log(2.0) / 2.0 * bandwidth * omega / sinOmega);
+        double bandwidth = 1.0; // means the quality factor Q ≈ 1.41
+        alpha = sinOmega * sinh(log(2.0) / 2.0 * bandwidth * omega / sinOmega); // sinh() is used to calculate the width of the band
         b0 = 1.0 + alpha * A;
         b1 = -2.0 * cosOmega;
         b2 = 1.0 - alpha * A;
@@ -74,6 +77,7 @@ double CEqualizerEffect::applyBiquadFilter(double input, double& x1, double& x2,
         a1 = -2.0 * cosOmega;
         a2 = 1.0 - alpha / A;
     }
+    // high shelf filter
     else if (type == FilterType::HIGH) {
         double beta = 2.0 * sqrt(A) * alpha;
         b0 = A * ((A + 1) + (A - 1) * cosOmega + beta);
@@ -86,9 +90,9 @@ double CEqualizerEffect::applyBiquadFilter(double input, double& x1, double& x2,
     else {
         return input;
     }
-    b0 /= a0; b1 /= a0; b2 /= a0;
+    b0 /= a0; b1 /= a0; b2 /= a0; // Normalization of coefficients
     a1 /= a0; a2 /= a0;
-    double output = b0 * input + b1 * x1 + b2 * x2 - a1 * y1 - a2 * y2;
+    double output = b0 * input + b1 * x1 + b2 * x2 - a1 * y1 - a2 * y2; // Calculating output using a recursive formula
     x2 = x1;
     x1 = input;
     y2 = y1;

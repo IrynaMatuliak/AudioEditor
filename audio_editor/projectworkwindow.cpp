@@ -106,7 +106,7 @@ void ProjectWorkWindow::setupMainLayout()
 
     ui->durationLabel->setEnabled(true);
     ui->durationLabel->setAlignment(Qt::AlignRight);
-    ui->durationLabel->setStyleSheet("QLabel { color: white; font-size: 20px; font-weight: bold; padding: 10px; }");
+    ui->durationLabel->setStyleSheet("QLabel { color: black; font-size: 20px; font-weight: bold; padding: 10px; }");
 
     titleLayout->addWidget(ui->projectNameLabel);
     titleLayout->addWidget(ui->durationLabel);
@@ -640,6 +640,7 @@ void ProjectWorkWindow::on_resetButton_clicked()
 
 void ProjectWorkWindow::updatePosition(qint64 position)
 {
+    // Update the slider if the user does not drag it
     if (!ui->timelineSlider->isSliderDown()) {
         ui->timelineSlider->setValue(position);
     }
@@ -742,10 +743,11 @@ void ProjectWorkWindow::loadAudioForVisualization(const QString &filePath)
     SNDFILE* infile = sf_open(filePath.toUtf8().constData(), SFM_READ, &sfInfoIn);
 
     if (infile != nullptr) {
-        const int BUFFER_SIZE = 200000;
+        const int BUFFER_SIZE = 200000; // number of frames to read at a time
         std::vector<float> buffer;
-        buffer.resize(BUFFER_SIZE*sfInfoIn.channels);
+        buffer.resize(BUFFER_SIZE*sfInfoIn.channels); // frames х number of channels
         while(sf_count_t readItems = sf_readf_float(infile, &buffer.front(), BUFFER_SIZE)) {
+            // Copies frames, not samples (for stereo each frame has 2 samples)
             std::copy(buffer.begin(), buffer.begin()+readItems, std::back_inserter(audioData));
         }
         sf_close(infile);
@@ -826,6 +828,7 @@ void ProjectWorkWindow::on_trimButton_clicked()
 
     try {
         while (framesToCopy > 0) {
+            // Determine the number of frames for this iteration
             sf_count_t framesThisTime = qMin(framesToCopy, (sf_count_t)BUFFER_SIZE);
             sf_count_t framesRead = sf_readf_float(infile, buffer.data(), framesThisTime);
 
@@ -854,6 +857,7 @@ void ProjectWorkWindow::on_trimButton_clicked()
     SF_INFO testinfo;
     memset(&testinfo, 0, sizeof(testinfo));
     SNDFILE* testfile = sf_open(tempFile.toUtf8().constData(), SFM_READ, &testinfo);
+    // If the opening was successful, it will contain a valid handle
     if (!testfile || testinfo.frames != totalFramesWritten) {
         QFile::remove(tempFile);
         showErrorMessage("Failed to create valid output file");
@@ -863,7 +867,6 @@ void ProjectWorkWindow::on_trimButton_clicked()
     sf_close(testfile);
 
     updateProjectWithNewFile(tempFile, totalFramesWritten, sfinfo.samplerate);
-
 
     showSuccessMessage(QString("Trim is done. Selection (%1 - %2) is now the new audio from 0:00")
                            .arg(QTime::fromMSecsSinceStartOfDay(startMs).toString("mm:ss"))
@@ -877,9 +880,11 @@ void ProjectWorkWindow::undo()
     }
 
     player->stop();
+    // Clears the player source to correctly change the file to be played next
     player->setSource(QUrl());
 
     currentHistoryIndex--;
+    // An AudioState object is retrieved from the history, which contains all the parameters of the previous project state
     AudioState previousState = undoHistory[currentHistoryIndex];
 
     if (QFile::exists(previousState.filePath)) {
@@ -1257,7 +1262,7 @@ void ProjectWorkWindow::paste()
 
     qint64 pastePositionFrames = (pastePositionMs * sfinfo.samplerate) / 1000;
     qint64 pasteFrames = dataToPaste->size() / sfinfo.channels;
-
+    // Creates a vector originalAudio large enough to hold all samples of the original file
     QVector<float> originalAudio(sfinfo.frames * sfinfo.channels);
     sf_seek(infile, 0, SEEK_SET);
     sf_count_t framesRead = sf_readf_float(infile, originalAudio.data(), sfinfo.frames);
@@ -1488,7 +1493,8 @@ void ProjectWorkWindow::save()
         sfOutFileInfo.frames = sfInFileInfo.frames;
         sfOutFileInfo.samplerate = projectSamplingRate;
         sfOutFileInfo.channels = projectChannelsCount;
-        sfOutFileInfo.format = SF_FORMAT_MPEG | SF_FORMAT_MPEG_LAYER_III;
+        //sfOutFileInfo.format = SF_FORMAT_MPEG | SF_FORMAT_MPEG_LAYER_III;
+        sfOutFileInfo.format = sfInFileInfo.format;
         sfOutFileInfo.sections = sfInFileInfo.sections;
         sfOutFileInfo.seekable = sfInFileInfo.seekable;
 
@@ -1618,19 +1624,23 @@ QVector<float> ProjectWorkWindow::resampleAudio(const QVector<float>& audioData,
         return audioData;
     }
 
-    double ratio = (double)targetSampleRate / (double)originalSampleRate;
+    // ratio > 1 - upsampling (increasing frequency, more samples)
+    // ratio < 1 - downsampling (decreasing frequency, fewer samples)
+    double ratio = (double)targetSampleRate / (double)originalSampleRate; // oversampling factor
     int newSize = (int)(audioData.size() * ratio / channels) * channels;
     QVector<float> resampled(newSize);
 
     for (int i = 0; i < newSize / channels; i++) {
         double oldIndex = i / ratio;
-        int index1 = (int)oldIndex;
-        int index2 = qMin(index1 + 1, audioData.size() / channels - 1);
-        double fraction = oldIndex - index1;
-
+        int index1 = (int)oldIndex; // integer frame index in the original audio
+        int index2 = qMin(index1 + 1, audioData.size() / channels - 1); // the next integer frame index in the original audio
+        double fraction = oldIndex - index1; // shows how far oldIndex is between index1 and index2
+        // Interpolation for Each Channel
         for (int ch = 0; ch < channels; ch++) {
-            float sample1 = audioData[index1 * channels + ch];
+            float sample1 = audioData[index1 * channels + ch]; // absolute sample index for the first reference frame
             float sample2 = audioData[index2 * channels + ch];
+            // The calculated value is written to the current frame and channel of the new audio file
+            // Calculates how much the value of sample1 needs to change, proportional to the distance (fraction), to reach the oldIndex point
             resampled[i * channels + ch] = sample1 + fraction * (sample2 - sample1);
         }
     }
@@ -1693,7 +1703,7 @@ void ProjectWorkWindow::mixRecordedAudioWithOriginal()
         recordedData.resize(recordedSamples * recordedInfo.channels);
     }
 
-    const float gain = 2.0f;
+    const float gain = 2.0f; // amplifies the recorded voice by 2 times
     for (int i = 0; i < recordedData.size(); i++) {
         recordedData[i] = qBound(-1.0f, recordedData[i] * gain, 1.0f);
     }
@@ -2484,7 +2494,6 @@ void ProjectWorkWindow::applyFadeOut()
 void ProjectWorkWindow::applyFadeEffect(bool isFadeIn, double fadeDuration, const QString& curveTypeName,
                                         bool applyToSelection, qint64 startMs, qint64 endMs)
 {
-
     clearFutureHistory();
     stopPlayerAndResetUI();
 
@@ -2781,6 +2790,7 @@ QString ProjectWorkWindow::getFormatDescription(int format)
     case SF_FORMAT_PCM_32: description += "32-bit PCM"; break;
     case SF_FORMAT_FLOAT: description += "32-bit Float"; break;
     case SF_FORMAT_DOUBLE: description += "64-bit Double"; break;
+    default: description += "Unknown"; break;
     }
     description += ")";
 

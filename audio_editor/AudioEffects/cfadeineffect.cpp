@@ -7,7 +7,7 @@ CFadeInEffect::CFadeInEffect() {}
 void CFadeInEffect::apply(QVector<float>& audioData, int channels, qint64 startSample, qint64 fadeSamples, ECurveType curveType)
 {
     for (qint64 i = 0; i < fadeSamples; i++) {
-        double progress = static_cast<double>(i) / fadeSamples;
+        double progress = static_cast<double>(i) / fadeSamples; // for each sample of fade section, from 0.0 to 1.0
         double gain = calculateFadeGain(progress, curveType);
 
         for (int ch = 0; ch < channels; ch++) {

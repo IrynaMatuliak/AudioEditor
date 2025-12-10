@@ -10,7 +10,7 @@ void CEchoEffect::apply(QVector<float>& audioData, int sampleRate, int channels,
     int delaySamples = static_cast<int>((delayMs * sampleRate) / 1000.0);
 
     if (delaySamples <= 0) {
-        delaySamples = static_cast<int>(0.4 * sampleRate);
+        delaySamples = static_cast<int>(0.4 * sampleRate); // set the default delay to 400 ms
     }
     if (repetitions <= 0) {
         repetitions = 4;
@@ -24,10 +24,11 @@ void CEchoEffect::apply(QVector<float>& audioData, int sampleRate, int channels,
 
         for (qint64 i = startSample; i < startSample + processSamples; i++) {
             qint64 idx = i * channels + ch;
-            float inputSample = audioData[idx];
+            float inputSample = audioData[idx]; // Getting the current input sample
             float outputSample = inputSample;
 
             for (int rep = 1; rep <= repetitions; rep++) {
+                // delaySamples - number of samples between the main signal and the first echo, rep - repetition number
                 int readPos = (writePos - delaySamples * rep + delayBuffer.size()) % delayBuffer.size();
                 float echoSample = delayBuffer[readPos] * static_cast<float>(pow(decay, rep));
                 outputSample += echoSample;
